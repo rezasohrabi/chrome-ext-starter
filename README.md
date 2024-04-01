@@ -1,0 +1,1 @@
+# react-vite-tailwind-chrome-extension-starter
