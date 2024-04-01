@@ -1,7 +1,9 @@
 {
-  "name": "my-vue-app",
+  "name": "chrome-ext-starter",
+  "displayName": "Chrome Extension Starter",
+  "description": "Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +18,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "^1.0.14",
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
     "@types/node": "^20.12.2",
     "@types/react": "^18.2.66",
@@ -41,7 +44,8 @@
     "prettier-plugin-tailwindcss": "^0.5.13",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2",
-    "vite": "^5.2.0"
+    "vite": "^5.2.0",
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
