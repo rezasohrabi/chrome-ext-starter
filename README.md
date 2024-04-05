@@ -2,6 +2,8 @@
 
 Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.
 
+Why choose this template? 🤔 Well, there are countless templates out there, but if you're eyeing Tailwind for your Chrome extension, you're in luck! 🎉 With this template, diving into extension development becomes a breeze – no configuration needed! 💻
+
 ## Key Features
 - 🛠️ **Vite**: for lightning-fast development and hot module replacement.
 - 🧰 **TypeScript**: for type safety and enhanced productivity.
