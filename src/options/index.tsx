@@ -5,6 +5,6 @@ import Options from './Options';
 
 import './index.css';
 
-const root = createRoot(document.getElementById('my-ext-options')!);
+const root = createRoot(document.getElementById('my-ext-options-page')!);
 
 root.render(<Options />);

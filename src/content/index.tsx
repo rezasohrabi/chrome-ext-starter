@@ -2,12 +2,14 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import Content from './Content';
-
-import './index.css';
+import styles from './index.css?inline';
 
 const container = document.createElement('div');
-container.setAttribute('id', 'my-ext-id');
 const shadow = container.attachShadow({ mode: 'open' });
+const globalStyleSheet = new CSSStyleSheet();
+globalStyleSheet.replaceSync(styles);
+
+shadow.adoptedStyleSheets = [globalStyleSheet];
 document.body.appendChild(container);
 
 const root = createRoot(shadow);
