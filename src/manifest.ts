@@ -3,7 +3,7 @@ import { defineManifest } from '@crxjs/vite-plugin';
 
 import packageData from '../package.json';
 
-const isDev = false;
+const isDev = process.env.NODE_ENV === 'development';
 
 export default defineManifest({
   manifest_version: 3,
@@ -34,7 +34,9 @@ export default defineManifest({
   permissions: ['activeTab', 'storage'],
   content_scripts: [
     {
-      js: ['src/content/index.tsx'],
+      js: isDev
+        ? ['src/content/index.dev.tsx']
+        : ['src/content/index.prod.tsx'],
       matches: ['<all_urls>'],
     },
   ],
