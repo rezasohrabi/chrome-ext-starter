@@ -1,6 +1,6 @@
 import React, { JSX } from 'react';
 
-export default function Options(): JSX.Element {
+export default function Popup(): JSX.Element {
   return (
     <div id='my-ext' className='container' data-theme='light'>
       <button type='button' className='btn btn-outline'>
