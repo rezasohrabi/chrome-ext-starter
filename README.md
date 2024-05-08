@@ -19,12 +19,6 @@ Why choose this template? 🤔 Well, there are countless templates out there, bu
 
 ## Usage Instructions
 1. 📥 Clone the repository.
-2. 🔧 Install dependencies with `npm install`.
-3. 🚀 Start development server with `npm run dev`.
-4. 🏗️ Build your extension for production with `npm run build`.
-
-## Need Help?
-Join our vibrant community on Discord for support, collaboration, and inspiration.
-
-🔗 [GitHub Repository](https://github.com/your-username/your-repo)
-🔗 [Discord Community](https://discord.gg/your-community)
+2. 🔧 Install dependencies with `pnpm install`.
+3. 🚀 Start development server with `pnpm dev`.
+4. 🏗️ Build your extension for production with `pnpm build`.
