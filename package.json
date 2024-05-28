@@ -23,6 +23,7 @@
     "@crxjs/vite-plugin": "^1.0.14",
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
     "@thedutchcoder/postcss-rem-to-px": "^0.0.2",
+    "@types/chrome": "^0.0.268",
     "@types/node": "^20.12.2",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
