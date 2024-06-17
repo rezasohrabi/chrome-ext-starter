@@ -18,13 +18,12 @@ import '@assets/styles/index.css';
 
 const container = document.createElement('div');
 
-// The viteDevId represents the path to the CSS file in development mode
-const viteDevId = '/chrome-ext-starter/src/content/index.css';
-
 // Get the style element corresponding to the CSS file
-const styleElement = document.querySelector(
-  `style[data-vite-dev-id*="${viteDevId}"]`
-)!;
+const styleElement = document.querySelector('style[data-vite-dev-id]');
+
+if (!styleElement) {
+  throw new Error('Style element with attribute data-vite-dev-id not found.');
+}
 
 // Attach the style element to the shadow root
 const shadowRoot = container.attachShadow({ mode: 'open' });
