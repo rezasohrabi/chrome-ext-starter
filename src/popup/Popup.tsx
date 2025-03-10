@@ -143,7 +143,7 @@ function Popup(): React.ReactElement {
     <div className='card w-80 bg-base-100 shadow-xl'>
       <div className='card-body p-5'>
         <div className='mb-4 flex items-center justify-between'>
-          <h2 className='card-title flex items-center text-blue-600'>
+          <h2 className='card-title flex items-center text-primary'>
             <svg
               className='mr-2 h-6 w-6'
               viewBox='0 0 24 24'
@@ -206,7 +206,7 @@ function Popup(): React.ReactElement {
                   >
                     <span className='flex items-center'>
                       <svg
-                        className='mr-2 h-5 w-5 text-blue-500'
+                        className='mr-2 h-5 w-5 text-accent'
                         viewBox='0 0 24 24'
                         fill='none'
                         xmlns='http://www.w3.org/2000/svg'
@@ -275,7 +275,7 @@ function Popup(): React.ReactElement {
                   onClick={() => handleSnooze(option)}
                 >
                   <svg
-                    className='mr-2 h-5 w-5 text-blue-500'
+                    className='mr-2 h-5 w-5 text-accent'
                     viewBox='0 0 24 24'
                     fill='none'
                     xmlns='http://www.w3.org/2000/svg'

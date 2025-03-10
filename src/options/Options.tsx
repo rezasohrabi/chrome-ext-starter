@@ -152,16 +152,16 @@ function Options(): React.ReactElement {
   );
 
   const renderTabsTable = (): React.ReactElement => (
-    <div className='card bg-base-100 shadow-xl'>
-      <div className='card-body'>
-        <div className='overflow-x-auto'>
-          <table className='table table-zebra'>
+    <div className='card w-full bg-base-100 shadow-xl'>
+      <div className='card-body p-0'>
+        <div className='w-full overflow-x-auto'>
+          <table className='table table-zebra w-full'>
             <thead>
               <tr>
-                <th>Tab</th>
-                <th>Snooze Until</th>
-                <th>Time Left</th>
-                <th>Actions</th>
+                <th className='w-1/4'>Tab</th>
+                <th className='w-1/4'>Snooze Until</th>
+                <th className='w-1/6'>Time Left</th>
+                <th className='w-1/3'>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -173,21 +173,23 @@ function Options(): React.ReactElement {
                         <img
                           src={tab.favicon}
                           alt='Tab favicon'
-                          className='h-5 w-5'
+                          className='h-5 w-5 flex-shrink-0'
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
                         />
                       )}
                       <div
-                        className='max-w-xs truncate'
+                        className='max-w-[160px] truncate sm:max-w-[220px]'
                         title={tab.title || tab.url}
                       >
                         {tab.title || tab.url || 'Unknown tab'}
                       </div>
                     </div>
                   </td>
-                  <td>{formatDate(tab.wakeTime)}</td>
+                  <td className='whitespace-normal'>
+                    {formatDate(tab.wakeTime)}
+                  </td>
                   <td>{calculateTimeLeft(tab.wakeTime)}</td>
                   <td>
                     <div className='flex space-x-2'>
