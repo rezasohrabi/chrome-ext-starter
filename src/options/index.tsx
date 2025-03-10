@@ -1,9 +1,13 @@
 import React from 'react';
-import styles from '@assets/styles/index.css?inline';
-import createShadowRoot from '@utils/createShadowRoot';
+import ReactDOM from 'react-dom/client';
 
 import Options from './Options';
 
-const root = createShadowRoot(styles);
+// Fix import path to point to the correct location
+import '../index.css';
 
-root.render(<Options />);
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <Options />
+  </React.StrictMode>
+);
