@@ -132,82 +132,86 @@ function Options(): React.ReactElement {
     return `${minutes}m`;
   };
 
-  // Rendering helpers to avoid nested ternaries
+  // Rendering helpers using DaisyUI components
   const renderLoading = (): React.ReactElement => (
     <div className='p-8 text-center'>
-      <div className='loading loading-spinner loading-lg' />
+      <span className='loading loading-spinner loading-lg' />
     </div>
   );
 
   const renderEmptyState = (): React.ReactElement => (
-    <div className='card bg-base-100 p-8 text-center shadow-md'>
-      <h3 className='mb-2 text-xl'>No Snoozed Tabs</h3>
-      <p className='text-gray-500'>
-        You don&apos;t have any snoozed tabs at the moment. Snooze a tab by
-        clicking the extension icon.
-      </p>
+    <div className='card w-full bg-base-100 shadow-xl'>
+      <div className='card-body text-center'>
+        <h2 className='card-title justify-center'>No Snoozed Tabs</h2>
+        <p>
+          You don&apos;t have any snoozed tabs at the moment. Snooze a tab by
+          clicking the extension icon.
+        </p>
+      </div>
     </div>
   );
 
   const renderTabsTable = (): React.ReactElement => (
-    <div className='card overflow-hidden bg-base-100 shadow-md'>
-      <div className='overflow-x-auto'>
-        <table className='table table-zebra'>
-          <thead>
-            <tr>
-              <th>Tab</th>
-              <th>Snooze Until</th>
-              <th>Time Left</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {snoozedTabItems.map((tab) => (
-              <tr key={tab.id}>
-                <td>
-                  <div className='flex items-center space-x-2'>
-                    {tab.favicon && (
-                      <img
-                        src={tab.favicon}
-                        alt='Tab favicon'
-                        className='h-5 w-5'
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div
-                      className='max-w-xs truncate'
-                      title={tab.title || tab.url}
-                    >
-                      {tab.title || tab.url || 'Unknown tab'}
-                    </div>
-                  </div>
-                </td>
-                <td>{formatDate(tab.wakeTime)}</td>
-                <td>{calculateTimeLeft(tab.wakeTime)}</td>
-                <td>
-                  <div className='flex space-x-2'>
-                    <button
-                      type='button'
-                      className='btn btn-primary btn-sm'
-                      onClick={() => wakeTabNow(tab)}
-                    >
-                      Wake Now
-                    </button>
-                    <button
-                      type='button'
-                      className='btn btn-outline btn-error btn-sm'
-                      onClick={() => removeTab(tab)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
+    <div className='card bg-base-100 shadow-xl'>
+      <div className='card-body'>
+        <div className='overflow-x-auto'>
+          <table className='table table-zebra'>
+            <thead>
+              <tr>
+                <th>Tab</th>
+                <th>Snooze Until</th>
+                <th>Time Left</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {snoozedTabItems.map((tab) => (
+                <tr key={tab.id}>
+                  <td>
+                    <div className='flex items-center space-x-2'>
+                      {tab.favicon && (
+                        <img
+                          src={tab.favicon}
+                          alt='Tab favicon'
+                          className='h-5 w-5'
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <div
+                        className='max-w-xs truncate'
+                        title={tab.title || tab.url}
+                      >
+                        {tab.title || tab.url || 'Unknown tab'}
+                      </div>
+                    </div>
+                  </td>
+                  <td>{formatDate(tab.wakeTime)}</td>
+                  <td>{calculateTimeLeft(tab.wakeTime)}</td>
+                  <td>
+                    <div className='flex space-x-2'>
+                      <button
+                        type='button'
+                        className='btn btn-primary btn-sm'
+                        onClick={() => wakeTabNow(tab)}
+                      >
+                        Wake Now
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn-outline btn-error btn-sm'
+                        onClick={() => removeTab(tab)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -226,9 +230,9 @@ function Options(): React.ReactElement {
     <div className='container mx-auto max-w-3xl p-4'>
       <div className='mb-6 flex items-center justify-between'>
         <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
-        <button
+        <button 
           type='button'
-          className='btn btn-outline btn-sm'
+          className='btn btn-outline'
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >

@@ -2,81 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 240, 240, 240;
+@font-face {
+  font-weight: 900;
+  src: url('../assets/fonts/Inter-Black.ttf');
+  font-family: 'Inter';
 }
 
-[data-theme='dark'] {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 30, 30, 30;
-  --background-end-rgb: 10, 10, 10;
+@font-face {
+  font-weight: 800;
+  src: url('../assets/fonts/Inter-ExtraBold.ttf');
+  font-family: 'Inter';
 }
 
-html,
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Open Sans',
-    'Helvetica Neue',
-    sans-serif;
+@font-face {
+  font-weight: 700;
+  src: url('../assets/fonts/Inter-Bold.ttf');
+  font-family: 'Inter';
 }
 
-/* Ensure popup has proper sizing */
-body {
-  margin: 0;
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--background-start-rgb)),
-    rgb(var(--background-end-rgb))
-  );
-  padding: 0;
-  min-width: 320px;
-  color: rgb(var(--foreground-rgb));
+@font-face {
+  font-weight: 600;
+  src: url('../assets/fonts/Inter-SemiBold.ttf');
+  font-family: 'Inter';
 }
 
-/* Override for DaisyUI components in Chrome extension context */
-.btn {
-  text-transform: none;
+@font-face {
+  font-weight: 500;
+  src: url('../assets/fonts/Inter-Medium.ttf');
+  font-family: 'Inter';
 }
 
-/* Fix for DaisyUI components */
-.btn-primary {
-  @apply bg-blue-600 text-white hover:bg-blue-700;
+@font-face {
+  font-weight: 400;
+  src: url('../assets/fonts/Inter-Regular.ttf');
+  font-family: 'Inter';
 }
 
-.btn-outline {
-  @apply border border-gray-300 hover:bg-gray-100;
+@font-face {
+  font-weight: 300;
+  src: url('../assets/fonts/Inter-Light.ttf');
+  font-family: 'Inter';
 }
 
-.input {
-  @apply rounded border border-gray-300 p-2;
+@font-face {
+  font-weight: 200;
+  src: url('../assets/fonts/Inter-ExtraLight.ttf');
+  font-family: 'Inter';
 }
 
-.card {
-  @apply rounded-lg border border-gray-200 shadow;
+@font-face {
+  font-weight: 100;
+  src: url('../assets/fonts/Inter-Thin.ttf');
+  font-family: 'Inter';
 }
 
-.bg-base-100 {
-  @apply bg-white;
-}
-
-.bg-base-200 {
-  @apply bg-gray-100;
-}
-
-.text-primary {
-  @apply text-blue-600;
-}
-
-.link {
-  @apply text-blue-600 hover:underline;
+:host {
+  all: initial;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  letter-spacing: normal;
 }
