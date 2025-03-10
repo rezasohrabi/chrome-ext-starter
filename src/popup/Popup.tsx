@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
 import { SnoozeOption } from '../types';
+import useTheme from '../utils/useTheme';
 
 // Using function declaration per ESLint rule
 function Popup(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<chrome.tabs.Tab | null>(null);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -18,69 +19,66 @@ function Popup(): React.ReactElement {
       setLoading(false);
     };
 
-    // Check for saved theme or use system preference
-    const loadTheme = async (): Promise<void> => {
-      try {
-        const { theme: savedTheme } = await chrome.storage.local.get('theme');
-
-        // If no saved theme, check system preference
-        if (!savedTheme) {
-          const prefersDark = window.matchMedia(
-            '(prefers-color-scheme: dark)'
-          ).matches;
-          const systemTheme = prefersDark ? 'dark' : 'light';
-          setTheme(systemTheme);
-          document.documentElement.setAttribute('data-theme', systemTheme);
-        } else {
-          setTheme(savedTheme);
-          document.documentElement.setAttribute('data-theme', savedTheme);
-        }
-      } catch (error) {
-        // Use light theme as fallback
-        setTheme('light');
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
-    };
-
     getCurrentTab();
-    loadTheme();
-
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = async (e: MediaQueryListEvent): Promise<void> => {
-      try {
-        // Check if user has explicitly set a preference
-        const { theme: savedTheme } = await chrome.storage.local.get('theme');
-        // Only update if user hasn't explicitly set a preference
-        if (!savedTheme) {
-          const newTheme = e.matches ? 'dark' : 'light';
-          setTheme(newTheme);
-          document.documentElement.setAttribute('data-theme', newTheme);
-        }
-      } catch (error) {
-        // Ignore errors
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Toggle theme function
-  const toggleTheme = (): void => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    // Save theme preference
-    chrome.storage.local.set({ theme: newTheme });
-  };
-
   const snoozeOptions: SnoozeOption[] = [
-    { id: 'later_today', label: 'Later Today', hours: 3 },
-    { id: 'tonight', label: 'Tonight', hours: 8 },
-    { id: 'tomorrow', label: 'Tomorrow', hours: 24 },
-    { id: 'weekend', label: 'This Weekend', days: 2 },
-    { id: 'next_week', label: 'Next Week', days: 7 },
+    { id: 'later_today', label: 'Later Today (in 3h)', hours: 3 },
+    {
+      id: 'tonight',
+      label: 'Tonight (at 6pm)',
+      custom: true,
+      calculateTime: () => {
+        const today = new Date();
+        today.setHours(18, 0, 0, 0); // 6pm
+        // If it's already past 6pm, return current time + 1 hour
+        if (today.getTime() < Date.now()) {
+          return Date.now() + 60 * 60 * 1000;
+        }
+        return today.getTime();
+      },
+    },
+    {
+      id: 'tomorrow',
+      label: 'Tomorrow (9am)',
+      custom: true,
+      calculateTime: () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0); // 9am
+        return tomorrow.getTime();
+      },
+    },
+    {
+      id: 'weekend',
+      label: 'This Weekend (Saturday, 9am)',
+      custom: true,
+      calculateTime: () => {
+        const today = new Date();
+        const currentDay = today.getDay(); // 0 is Sunday, 6 is Saturday
+        const daysUntilSaturday = currentDay === 6 ? 7 : 6 - currentDay; // If today is Saturday, go to next Saturday
+
+        const targetDate = new Date();
+        targetDate.setDate(today.getDate() + daysUntilSaturday);
+        targetDate.setHours(9, 0, 0, 0); // 9am
+        return targetDate.getTime();
+      },
+    },
+    {
+      id: 'next_week',
+      label: 'Next Week (Monday, 9am)',
+      custom: true,
+      calculateTime: () => {
+        const today = new Date();
+        const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday
+        const daysUntilMonday = currentDay === 1 ? 7 : (8 - currentDay) % 7; // If today is Monday, go to next Monday
+
+        const targetDate = new Date();
+        targetDate.setDate(today.getDate() + daysUntilMonday);
+        targetDate.setHours(9, 0, 0, 0); // 9am
+        return targetDate.getTime();
+      },
+    },
     { id: 'custom', label: 'Pick a Date/Time', custom: true },
   ];
 
@@ -93,8 +91,10 @@ function Popup(): React.ReactElement {
     if (!activeTab || !activeTab.id) return;
 
     let wakeTime: number;
-    if (option.custom && showCustom) {
+    if (option.id === 'custom' && showCustom) {
       wakeTime = new Date(customDate).getTime();
+    } else if (option.calculateTime) {
+      wakeTime = option.calculateTime();
     } else {
       const now = Date.now();
       wakeTime =
@@ -197,7 +197,7 @@ function Popup(): React.ReactElement {
         <div className='space-y-2'>
           {snoozeOptions.map((option) => (
             <div key={option.id}>
-              {option.custom ? (
+              {option.id === 'custom' ? (
                 <div>
                   <button
                     type='button'

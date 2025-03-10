@@ -4,6 +4,7 @@ export interface SnoozeOption {
   hours?: number;
   days?: number;
   custom?: boolean;
+  calculateTime?: () => number;
 }
 
 export interface SnoozedTab {

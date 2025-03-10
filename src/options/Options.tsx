@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
 import { SnoozedTab } from '../types';
+import useTheme from '../utils/useTheme';
 
 // Defining the component as a function declaration per ESLint rule
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { theme, toggleTheme } = useTheme();
 
   // Moved loadSnoozedTabs before its usage to fix hoisting issue
   const loadSnoozedTabs = async (): Promise<void> => {
@@ -26,63 +27,9 @@ function Options(): React.ReactElement {
     }
   };
 
-  // Function to toggle theme
-  const toggleTheme = (): void => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-    // Save theme preference
-    chrome.storage.local.set({ theme: newTheme });
-  };
-
-  // Load theme preference and snoozed tabs on component mount
+  // Load snoozed tabs on component mount
   useEffect(() => {
-    // Check for saved theme or use system preference
-    const loadTheme = async (): Promise<void> => {
-      try {
-        const { theme: savedTheme } = await chrome.storage.local.get('theme');
-
-        // If no saved theme, check system preference
-        if (!savedTheme) {
-          const prefersDark = window.matchMedia(
-            '(prefers-color-scheme: dark)'
-          ).matches;
-          const systemTheme = prefersDark ? 'dark' : 'light';
-          setTheme(systemTheme);
-          document.documentElement.setAttribute('data-theme', systemTheme);
-        } else {
-          setTheme(savedTheme);
-          document.documentElement.setAttribute('data-theme', savedTheme);
-        }
-      } catch (error) {
-        // Use light theme as fallback
-        setTheme('light');
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
-    };
-
-    loadTheme();
     loadSnoozedTabs();
-
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = async (e: MediaQueryListEvent): Promise<void> => {
-      try {
-        // Check if user has explicitly set a preference
-        const { theme: savedTheme } = await chrome.storage.local.get('theme');
-        // Only update if user hasn't explicitly set a preference
-        if (!savedTheme) {
-          const newTheme = e.matches ? 'dark' : 'light';
-          setTheme(newTheme);
-          document.documentElement.setAttribute('data-theme', newTheme);
-        }
-      } catch (error) {
-        // Ignore errors
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const wakeTabNow = async (tab: SnoozedTab): Promise<void> => {
