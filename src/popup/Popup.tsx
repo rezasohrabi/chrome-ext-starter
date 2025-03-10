@@ -6,6 +6,7 @@ import { SnoozeOption } from '../types';
 function Popup(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<chrome.tabs.Tab | null>(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -16,8 +17,63 @@ function Popup(): React.ReactElement {
       setActiveTab(tab);
       setLoading(false);
     };
+
+    // Check for saved theme or use system preference
+    const loadTheme = async (): Promise<void> => {
+      try {
+        const { theme: savedTheme } = await chrome.storage.local.get('theme');
+
+        // If no saved theme, check system preference
+        if (!savedTheme) {
+          const prefersDark = window.matchMedia(
+            '(prefers-color-scheme: dark)'
+          ).matches;
+          const systemTheme = prefersDark ? 'dark' : 'light';
+          setTheme(systemTheme);
+          document.documentElement.setAttribute('data-theme', systemTheme);
+        } else {
+          setTheme(savedTheme);
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+      } catch (error) {
+        // Use light theme as fallback
+        setTheme('light');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    };
+
     getCurrentTab();
+    loadTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = async (e: MediaQueryListEvent): Promise<void> => {
+      try {
+        // Check if user has explicitly set a preference
+        const { theme: savedTheme } = await chrome.storage.local.get('theme');
+        // Only update if user hasn't explicitly set a preference
+        if (!savedTheme) {
+          const newTheme = e.matches ? 'dark' : 'light';
+          setTheme(newTheme);
+          document.documentElement.setAttribute('data-theme', newTheme);
+        }
+      } catch (error) {
+        // Ignore errors
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
+
+  // Toggle theme function
+  const toggleTheme = (): void => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    // Save theme preference
+    chrome.storage.local.set({ theme: newTheme });
+  };
 
   const snoozeOptions: SnoozeOption[] = [
     { id: 'later_today', label: 'Later Today', hours: 3 },
@@ -87,27 +143,43 @@ function Popup(): React.ReactElement {
   }
 
   return (
-    <div className='w-80 rounded-lg bg-gradient-to-b from-white to-gray-50 p-5 shadow-lg'>
-      <h1 className='mb-5 flex items-center justify-center text-center text-2xl font-bold text-blue-600'>
-        <svg
-          className='mr-2 h-6 w-6'
-          viewBox='0 0 24 24'
-          fill='none'
-          xmlns='http://www.w3.org/2000/svg'
+    <div className='w-80 rounded-lg bg-base-100 p-5 shadow-md'>
+      <div className='mb-5 flex items-center justify-between'>
+        <h1 className='flex items-center text-2xl font-bold text-blue-600'>
+          <svg
+            className='mr-2 h-6 w-6'
+            viewBox='0 0 24 24'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+          >
+            <circle
+              cx='12'
+              cy='12'
+              r='9'
+              stroke='currentColor'
+              strokeWidth='2'
+            />
+            <path
+              d='M12 7V12L15 15'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+            />
+          </svg>
+          Snooze Tab
+        </h1>
+        <button
+          type='button'
+          className='btn btn-circle btn-ghost btn-sm'
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
-          <circle cx='12' cy='12' r='9' stroke='currentColor' strokeWidth='2' />
-          <path
-            d='M12 7V12L15 15'
-            stroke='currentColor'
-            strokeWidth='2'
-            strokeLinecap='round'
-          />
-        </svg>
-        Snooze Tab
-      </h1>
+          {theme === 'light' ? '🌙' : '☀️'}
+        </button>
+      </div>
 
       {activeTab && (
-        <div className='mb-5 flex items-center rounded-lg border border-gray-100 bg-white p-3 shadow-md'>
+        <div className='mb-5 flex items-center rounded-lg border border-base-300 bg-base-200 p-3 shadow-sm'>
           {activeTab.favIconUrl && (
             <img
               src={activeTab.favIconUrl}
@@ -129,7 +201,7 @@ function Popup(): React.ReactElement {
               <div>
                 <button
                   type='button'
-                  className='flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 font-medium shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600'
+                  className='flex w-full items-center justify-between rounded-lg border border-base-300 bg-base-200 px-4 py-3 font-medium shadow-sm transition-all duration-200 hover:bg-base-300'
                   onClick={() => setShowCustom(!showCustom)}
                 >
                   <span className='flex items-center'>
@@ -174,19 +246,19 @@ function Popup(): React.ReactElement {
                 </button>
 
                 {showCustom && (
-                  <div className='mt-3 rounded-lg border border-blue-100 bg-blue-50 p-4 shadow-inner transition-all duration-300'>
+                  <div className='mt-3 rounded-lg border border-base-300 bg-base-200 p-4 shadow-inner transition-all duration-300'>
                     <p className='mb-2 text-xs text-gray-600'>
                       Select when to bring this tab back
                     </p>
                     <input
                       type='datetime-local'
-                      className='w-full rounded-lg border border-gray-300 bg-white p-2 outline-none transition-all duration-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-200'
+                      className='input input-bordered w-full'
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
                     />
                     <button
                       type='button'
-                      className='mt-3 w-full transform rounded-lg bg-blue-600 py-2 font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-700'
+                      className='btn btn-primary mt-3 w-full'
                       onClick={() => handleSnooze(option)}
                     >
                       Snooze until selected time
@@ -197,7 +269,7 @@ function Popup(): React.ReactElement {
             ) : (
               <button
                 type='button'
-                className='flex w-full items-center rounded-lg border border-gray-200 bg-white px-4 py-3 font-medium shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600'
+                className='flex w-full items-center rounded-lg border border-base-300 bg-base-200 px-4 py-3 font-medium shadow-sm transition-all duration-200 hover:bg-base-300'
                 onClick={() => handleSnooze(option)}
               >
                 <svg
