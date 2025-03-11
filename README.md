@@ -1,6 +1,6 @@
-# Snooze Tab Chrome Extension 💤
+# Snoozr Chrome Extension 💤
 
-Temporarily put tabs to sleep and have them reappear exactly when you need them! Snooze Tab helps you manage your browser tabs by letting you hide tabs until a specific time or date, reducing clutter and improving productivity.
+Temporarily put tabs to sleep and have them reappear exactly when you need them! Snoozr helps you manage your browser tabs by letting you hide tabs until a specific time or date, reducing clutter and improving productivity.
 
 ## Features
 

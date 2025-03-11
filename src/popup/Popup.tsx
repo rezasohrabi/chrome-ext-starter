@@ -164,7 +164,7 @@ function Popup(): React.ReactElement {
                 strokeLinecap='round'
               />
             </svg>
-            Snooze Tab
+            Snoozr
           </h2>
           <button
             type='button'
