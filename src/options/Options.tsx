@@ -193,7 +193,7 @@ function Options(): React.ReactElement {
       <div className='mt-6 text-center text-sm'>
         <div className='flex flex-col items-center justify-center gap-2'>
           <a
-            href='https://github.com/hardchor/tab-snooze'
+            href='https://github.com/hardchor/snoozr'
             target='_blank'
             rel='noopener noreferrer'
             className='link link-primary flex items-center gap-2'
@@ -213,7 +213,7 @@ function Options(): React.ReactElement {
           </a>
           <div className='flex gap-4'>
             <a
-              href='https://github.com/hardchor/tab-snooze/discussions/new?category=ideas'
+              href='https://github.com/hardchor/snoozr/discussions/new?category=ideas'
               target='_blank'
               rel='noopener noreferrer'
               className='link link-accent'
@@ -221,7 +221,7 @@ function Options(): React.ReactElement {
               Propose New Features
             </a>
             <a
-              href='https://github.com/hardchor/tab-snooze/issues/new'
+              href='https://github.com/hardchor/snoozr/issues/new'
               target='_blank'
               rel='noopener noreferrer'
               className='link link-accent'
