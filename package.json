@@ -14,8 +14,9 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@tanstack/react-router": "^1.114.25",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.2.1",
@@ -25,8 +26,8 @@
     "@thedutchcoder/postcss-rem-to-px": "^0.0.2",
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.12.2",
-    "@types/react": "^18.2.73",
-    "@types/react-dom": "^18.2.23",
+    "@types/react": "^19.0.11",
+    "@types/react-dom": "^19.0.4",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
