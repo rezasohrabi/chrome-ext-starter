@@ -7,6 +7,14 @@ export interface SnoozeOption {
   calculateTime?: () => number;
 }
 
+export interface RecurrencePattern {
+  type: 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'custom';
+  daysOfWeek?: number[]; // 0 = Sunday, 1 = Monday, etc.
+  dayOfMonth?: number; // 1-31
+  time: string; // HH:MM format
+  endDate?: number; // Optional timestamp when recurrence ends
+}
+
 export interface SnoozedTab {
   id: number;
   url?: string;
@@ -14,4 +22,6 @@ export interface SnoozedTab {
   favicon?: string;
   createdAt: number;
   wakeTime: number;
+  isRecurring?: boolean;
+  recurrencePattern?: RecurrencePattern;
 }
