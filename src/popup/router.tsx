@@ -52,7 +52,18 @@ const memoryHistory = createMemoryHistory({
 const router = createRouter({
   routeTree,
   history: memoryHistory,
+  defaultPreload: 'render',
+  // defaultStaleTime: 5000,
+  scrollRestoration: true,
+  defaultViewTransition: true,
 });
+
+// Register things for typesafety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 // Create and export the router provider component
 export default function Router() {

@@ -225,6 +225,7 @@ function MainView(): React.ReactElement {
             <Link
               to='/custom-snooze'
               className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              viewTransition={{ types: ['slide-left'] }}
             >
               <svg
                 className='mr-2 h-5 w-5 text-accent'
@@ -264,6 +265,8 @@ function MainView(): React.ReactElement {
             <Link
               to='/recurring-snooze'
               className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              // viewTransition={{ types: ['slide-left'] }}
+              viewTransition
             >
               <svg
                 className='mr-2 h-5 w-5 text-accent'
