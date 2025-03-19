@@ -53,8 +53,6 @@ const router = createRouter({
   routeTree,
   history: memoryHistory,
   defaultPreload: 'render',
-  // defaultStaleTime: 5000,
-  scrollRestoration: true,
   defaultViewTransition: true,
 });
 
