@@ -1,4 +1,4 @@
-# Chrome Extension Starter Kit 🚀
+# 🚀 Chrome Extension Starter Kit – Contribute & Make It Even Better! 🎉
 
 Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.
 
@@ -17,8 +17,11 @@ Why choose this template? 🤔 Well, there are countless templates out there, bu
 - ⚡ **Optimized Performance**: Leverage Vite's speed and Tailwind CSS's efficiency for blazing-fast development.
 - 👩‍💻 **Developer-Friendly**: TypeScript support and React components empower developers to build feature-rich extensions with ease.
 
-## Usage Instructions
-1. 📥 Clone the repository.
-2. 🔧 Install dependencies with `pnpm install`.
-3. 🚀 Start development server with `pnpm dev`.
-4. 🏗️ Build your extension for production with `pnpm build`.
+🚀 Get Started
+1️⃣ Clone the repo: git clone https://github.com/rezasohrabi/chrome-ext-starter.git
+2️⃣ Install dependencies: pnpm install
+3️⃣ Start development: pnpm dev
+4️⃣ Build for production: pnpm build
+
+🤝 How to Contribute
+We welcome and appreciate contributions to improve this project. Whether you would like to fix a bug, introduce a new feature, or enhance the documentation, your contributions are highly valued.
