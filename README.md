@@ -18,10 +18,10 @@ Why choose this template? 🤔 Well, there are countless templates out there, bu
 - 👩‍💻 **Developer-Friendly**: TypeScript support and React components empower developers to build feature-rich extensions with ease.
 
 ## 🚀 Get Started
-1️⃣ Clone the repo: git clone https://github.com/rezasohrabi/chrome-ext-starter.git
-2️⃣ Install dependencies: pnpm install
-3️⃣ Start development: pnpm dev
-4️⃣ Build for production: pnpm build
+- 1️⃣ Clone the repo: git clone https://github.com/rezasohrabi/chrome-ext-starter.git
+- 2️⃣ Install dependencies: pnpm install
+- 3️⃣ Start development: pnpm dev
+- 4️⃣ Build for production: pnpm build
 
 ### 🤝 How to Contribute
 We welcome and appreciate contributions to improve this project. Whether you would like to fix a bug, introduce a new feature, or enhance the documentation, your contributions are highly valued.
