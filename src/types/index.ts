@@ -1,3 +1,5 @@
+import { type ComponentType } from 'react';
+
 export interface SnoozeOption {
   id: string;
   label: string;
@@ -5,6 +7,7 @@ export interface SnoozeOption {
   days?: number;
   custom?: boolean;
   calculateTime?: () => number;
+  icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
 export interface RecurrencePattern {

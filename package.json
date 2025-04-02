@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:zip": "node scripts/build-zip.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "preinstall": "npx only-allow pnpm",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@tanstack/react-router": "^1.114.25",
+    "lucide-react": "^0.487.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
