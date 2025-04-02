@@ -273,16 +273,15 @@ function Options(): React.ReactElement {
         <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
         <button
           type='button'
-          className='btn btn-outline'
+          className={`btn btn-circle btn-ghost text-${theme === 'silk' ? 'gray' : 'yellow'}-500`}
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
         >
           {theme === 'silk' ? (
-            <Moon className='mr-2 h-4 w-4' strokeWidth={2} />
+            <Moon className='mr-2 h-4 w-4' strokeWidth={3} />
           ) : (
-            <Sun className='mr-2 h-4 w-4' strokeWidth={2} />
+            <Sun className='mr-2 h-4 w-4' strokeWidth={3} />
           )}
-          {theme === 'silk' ? 'Dark' : 'Light'} Mode
         </button>
       </div>
       {content}
