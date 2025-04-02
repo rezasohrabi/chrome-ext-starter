@@ -182,26 +182,30 @@ function MainView(): React.ReactElement {
             type='button'
             className='btn btn-circle btn-ghost btn-sm'
             onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'silk' ? '🌙' : '☀️'}
           </button>
         </div>
 
         {activeTab && (
-          <div className='bg-base-100 mb-4 flex items-center rounded-lg p-3 shadow-2xs'>
-            {activeTab.favIconUrl && (
-              <img
-                src={activeTab.favIconUrl}
-                alt='Tab favicon'
-                className='mr-3 h-5 w-5'
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            )}
-            <div className='truncate text-sm font-medium'>
-              {activeTab.title}
+          <div className='card card-border'>
+            <div className='card-body'>
+              <div className='mb-2 flex items-center'>
+                {activeTab.favIconUrl && (
+                  <img
+                    src={activeTab.favIconUrl}
+                    alt='Tab favicon'
+                    className='mr-3 h-5 w-5'
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+                <span className='truncate text-sm font-medium'>
+                  {activeTab.title}
+                </span>
+              </div>
             </div>
           </div>
         )}

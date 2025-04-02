@@ -6,16 +6,20 @@ import { RecurrencePattern, SnoozedTab } from '../../types';
 // Accessible Form Control component using function declaration with destructured props
 function FormControl({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
+  htmlFor: string;
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <div className='form-control'>
-      <span className='mb-2 block text-sm font-medium'>{label}</span>
+    <fieldset className='fieldset'>
+      <label className='label' htmlFor={htmlFor}>
+        {label}
+      </label>
       {children}
-    </div>
+    </fieldset>
   );
 }
 
@@ -217,10 +221,10 @@ function RecurringSnoozeView(): React.ReactElement {
         )}
 
         <form className='space-y-4' onSubmit={(e) => e.preventDefault()}>
-          <FormControl label='Recurrence Pattern'>
+          <FormControl label='Recurrence Pattern' htmlFor={patternId}>
             <select
               id={patternId}
-              className='select select-bordered w-full'
+              className='select'
               value={recurrenceType}
               onChange={(e) =>
                 setRecurrenceType(e.target.value as RecurrencePattern['type'])
@@ -235,11 +239,11 @@ function RecurringSnoozeView(): React.ReactElement {
             </select>
           </FormControl>
 
-          <FormControl label='Time'>
+          <FormControl label='Time' htmlFor={timeId}>
             <input
               id={timeId}
               type='time'
-              className='input input-bordered w-full'
+              className='input w-full'
               value={time}
               onChange={(e) => setTime(e.target.value)}
               aria-label='Wake time'
@@ -247,7 +251,7 @@ function RecurringSnoozeView(): React.ReactElement {
           </FormControl>
 
           {(recurrenceType === 'weekly' || recurrenceType === 'custom') && (
-            <FormControl label='Days of Week'>
+            <FormControl label='Days of Week' htmlFor={daysOfWeekId}>
               <div
                 className='flex justify-between'
                 role='group'
@@ -274,10 +278,10 @@ function RecurringSnoozeView(): React.ReactElement {
           )}
 
           {recurrenceType === 'monthly' && (
-            <FormControl label='Day of Month'>
+            <FormControl label='Day of Month' htmlFor={dayOfMonthId}>
               <select
                 id={dayOfMonthId}
-                className='select select-bordered w-full'
+                className='select'
                 value={dayOfMonth}
                 onChange={(e) => setDayOfMonth(Number(e.target.value))}
                 aria-label='Day of month'
@@ -291,11 +295,11 @@ function RecurringSnoozeView(): React.ReactElement {
             </FormControl>
           )}
 
-          <FormControl label='End Date (Optional)'>
+          <FormControl label='End Date (Optional)' htmlFor={endDateId}>
             <input
               id={endDateId}
               type='date'
-              className='input input-bordered w-full'
+              className='input w-full'
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               aria-label='End date'

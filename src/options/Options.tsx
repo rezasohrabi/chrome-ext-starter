@@ -275,14 +275,14 @@ function Options(): React.ReactElement {
           type='button'
           className='btn btn-outline'
           onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
         >
-          {theme === 'light' ? (
+          {theme === 'silk' ? (
             <Moon className='mr-2 h-4 w-4' strokeWidth={2} />
           ) : (
             <Sun className='mr-2 h-4 w-4' strokeWidth={2} />
           )}
-          {theme === 'light' ? 'Dark' : 'Light'} Mode
+          {theme === 'silk' ? 'Dark' : 'Light'} Mode
         </button>
       </div>
       {content}

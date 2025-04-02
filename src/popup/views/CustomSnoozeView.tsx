@@ -112,7 +112,7 @@ function CustomSnoozeView(): React.ReactElement {
           <p className='text-sm'>Select when to bring this tab back:</p>
           <input
             type='datetime-local'
-            className='input input-bordered w-full'
+            className='input w-full'
             value={customDate}
             onChange={(e) => setCustomDate(e.target.value)}
           />

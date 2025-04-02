@@ -9,7 +9,7 @@ import React, { JSX } from 'react';
 
 export default function Content(): JSX.Element {
   return (
-    <div id='my-ext' className='container' data-theme='light'>
+    <div id='my-ext' className='container' data-theme='silk'>
       <div className='mx-auto w-72 rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800'>
         <p className='text-gray-600 dark:text-white'>
           <span className='text-lg font-bold text-indigo-500'>“</span>
