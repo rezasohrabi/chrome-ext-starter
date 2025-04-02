@@ -152,10 +152,10 @@ function MainView(): React.ReactElement {
   }
 
   return (
-    <div className='card w-80 bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-80 shadow-xl'>
       <div className='card-body p-5'>
         <div className='mb-4 flex items-center justify-between'>
-          <h2 className='card-title flex items-center text-primary'>
+          <h2 className='card-title text-primary flex items-center'>
             <svg
               className='mr-2 h-6 w-6'
               viewBox='0 0 24 24'
@@ -189,7 +189,7 @@ function MainView(): React.ReactElement {
         </div>
 
         {activeTab && (
-          <div className='mb-4 flex items-center rounded-lg bg-base-100 p-3 shadow-sm'>
+          <div className='bg-base-100 mb-4 flex items-center rounded-lg p-3 shadow-2xs'>
             {activeTab.favIconUrl && (
               <img
                 src={activeTab.favIconUrl}
@@ -211,12 +211,12 @@ function MainView(): React.ReactElement {
             <div key={option.id} className='card'>
               <button
                 type='button'
-                className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+                className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
                 onClick={() => handleSnooze(option)}
               >
                 {option.icon && (
                   <option.icon
-                    className='mr-2 h-5 w-5 text-accent'
+                    className='text-accent mr-2 h-5 w-5'
                     strokeWidth={2}
                   />
                 )}
@@ -229,10 +229,10 @@ function MainView(): React.ReactElement {
           <div className='card'>
             <Link
               to='/custom-snooze'
-              className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
               viewTransition={{ types: ['slide-left'] }}
             >
-              <Calendar className='mr-2 h-5 w-5 text-accent' strokeWidth={2} />
+              <Calendar className='text-accent mr-2 h-5 w-5' strokeWidth={2} />
               Pick a Date/Time
             </Link>
           </div>
@@ -241,10 +241,10 @@ function MainView(): React.ReactElement {
           <div className='card'>
             <Link
               to='/recurring-snooze'
-              className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
               viewTransition={{ types: ['slide-left'] }}
             >
-              <RotateCcw className='mr-2 h-5 w-5 text-accent' strokeWidth={2} />
+              <RotateCcw className='text-accent mr-2 h-5 w-5' strokeWidth={2} />
               Recurring Snooze
             </Link>
           </div>

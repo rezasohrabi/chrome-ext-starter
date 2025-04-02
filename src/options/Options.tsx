@@ -149,10 +149,10 @@ function Options(): React.ReactElement {
   );
 
   const renderEmptyState = (): React.ReactElement => (
-    <div className='card w-full bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-full shadow-xl'>
       <div className='card-body text-center'>
         <h2 className='card-title justify-center'>
-          <AlertCircle className='mr-2 h-5 w-5 text-warning' strokeWidth={2} />
+          <AlertCircle className='text-warning mr-2 h-5 w-5' strokeWidth={2} />
           No Snoozed Tabs
         </h2>
         <p>
@@ -164,10 +164,10 @@ function Options(): React.ReactElement {
   );
 
   const renderTabsTable = (): React.ReactElement => (
-    <div className='card w-full bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-full shadow-xl'>
       <div className='card-body p-0'>
         <div className='w-full overflow-x-auto'>
-          <table className='table table-zebra w-full'>
+          <table className='table-zebra table w-full'>
             <thead>
               <tr>
                 <th className='w-1/4'>Tab</th>
@@ -195,7 +195,7 @@ function Options(): React.ReactElement {
                         <img
                           src={tab.favicon}
                           alt='Tab favicon'
-                          className='h-5 w-5 flex-shrink-0'
+                          className='h-5 w-5 shrink-0'
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
@@ -211,7 +211,7 @@ function Options(): React.ReactElement {
                         {tab.isRecurring && (
                           <div className='tooltip' data-tip='Recurring snooze'>
                             <RotateCcw
-                              className='ml-1.5 h-3.5 w-3.5 text-accent'
+                              className='text-accent ml-1.5 h-3.5 w-3.5'
                               strokeWidth={2.5}
                             />
                           </div>

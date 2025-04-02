@@ -63,7 +63,7 @@ function CustomSnoozeView(): React.ReactElement {
   }
 
   return (
-    <div className='card w-80 bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-80 shadow-xl'>
       <div className='card-body p-5'>
         <div className='mb-4 flex items-center'>
           <Link
@@ -91,7 +91,7 @@ function CustomSnoozeView(): React.ReactElement {
         </div>
 
         {activeTab && (
-          <div className='mb-4 flex items-center rounded-lg bg-base-100 p-3 shadow-sm'>
+          <div className='bg-base-100 mb-4 flex items-center rounded-lg p-3 shadow-2xs'>
             {activeTab.favIconUrl && (
               <img
                 src={activeTab.favIconUrl}

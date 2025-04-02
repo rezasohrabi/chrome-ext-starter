@@ -22,7 +22,7 @@ export default function Content(): JSX.Element {
             <img
               alt='profil'
               src='https://www.tailwind-kit.com/images/person/1.jpg'
-              className='mx-auto h-10 w-10 rounded-full object-cover '
+              className='mx-auto h-10 w-10 rounded-full object-cover'
             />
           </a>
           <div className='ml-2 flex flex-col justify-between'>
@@ -136,7 +136,7 @@ export default function Content(): JSX.Element {
         </button>
       </div>
 
-      <div className='carousel carousel-center max-w-md space-x-4 rounded-box bg-neutral p-4'>
+      <div className='carousel carousel-center rounded-box bg-neutral max-w-md space-x-4 p-4'>
         <div className='carousel-item'>
           <img
             src='https://daisyui.com/images/stock/photo-1559703248-dcaaec9fab78.jpg'
@@ -302,7 +302,7 @@ export default function Content(): JSX.Element {
         </div>
         <ul
           tabIndex={0}
-          className='menu dropdown-content z-[1] w-52 rounded-box bg-base-100 p-2 shadow'
+          className='menu dropdown-content rounded-box bg-base-100 z-1 w-52 p-2 shadow-xs'
         >
           <li>
             <a>Item 1</a>
