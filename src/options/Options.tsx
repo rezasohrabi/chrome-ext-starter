@@ -76,8 +76,58 @@ function Options(): React.ReactElement {
     }
   };
 
-  const formatDate = (timestamp: number): string =>
-    new Date(timestamp).toLocaleString();
+  const formatHumanFriendlyDate = (timestamp: number): string => {
+    const wakeDate = new Date(timestamp);
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+
+    const isToday =
+      wakeDate.getDate() === now.getDate() &&
+      wakeDate.getMonth() === now.getMonth() &&
+      wakeDate.getFullYear() === now.getFullYear();
+
+    const isTomorrow =
+      wakeDate.getDate() === tomorrow.getDate() &&
+      wakeDate.getMonth() === tomorrow.getMonth() &&
+      wakeDate.getFullYear() === tomorrow.getFullYear();
+
+    // Format time in 12-hour format with AM/PM
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+    const timeStr = wakeDate.toLocaleTimeString(undefined, timeOptions);
+
+    if (isToday) {
+      return `Today at ${timeStr}`;
+    }
+
+    if (isTomorrow) {
+      return `Tomorrow at ${timeStr}`;
+    }
+
+    // For dates within the next 6 days, show the day of week
+    const daysUntil = Math.floor(
+      (wakeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysUntil < 7) {
+      const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
+      const dayName = wakeDate.toLocaleDateString(undefined, options);
+      return `${dayName} at ${timeStr}`;
+    }
+
+    // For dates further in the future, show the month and day
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+      year:
+        wakeDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    };
+    const dateStr = wakeDate.toLocaleDateString(undefined, dateOptions);
+    return `${dateStr} at ${timeStr}`;
+  };
 
   const calculateTimeLeft = (wakeTime: number): string => {
     const now = Date.now();
@@ -170,7 +220,7 @@ function Options(): React.ReactElement {
                     </div>
                   </td>
                   <td className='whitespace-normal'>
-                    {formatDate(tab.wakeTime)}
+                    {formatHumanFriendlyDate(tab.wakeTime)}
                   </td>
                   <td>{calculateTimeLeft(tab.wakeTime)}</td>
                   <td>
