@@ -6,6 +6,7 @@ import {
   Github,
   Lightbulb,
   Moon,
+  RotateCcw,
   Sun,
   Sunrise,
   Trash2,
@@ -150,11 +151,21 @@ function Options(): React.ReactElement {
                           }}
                         />
                       )}
-                      <div
-                        className='max-w-[160px] truncate sm:max-w-[220px]'
-                        title={tab.title || tab.url}
-                      >
-                        {tab.title || tab.url || 'Unknown tab'}
+                      <div className='flex items-center'>
+                        <div
+                          className='max-w-[160px] truncate sm:max-w-[220px]'
+                          title={tab.title || tab.url}
+                        >
+                          {tab.title || tab.url || 'Unknown tab'}
+                        </div>
+                        {tab.isRecurring && (
+                          <div className='tooltip' data-tip='Recurring snooze'>
+                            <RotateCcw
+                              className='ml-1.5 h-3.5 w-3.5 text-accent'
+                              strokeWidth={2.5}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
