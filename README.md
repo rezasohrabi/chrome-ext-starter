@@ -32,3 +32,10 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 2. 🔧 Install dependencies with `pnpm install`
 3. 🚀 Start development server with `pnpm dev`
 4. 🏗️ Build the extension for production with `pnpm build`
+
+## Releasing to Chrome Web Store
+
+1. 🏗️ Build and package the extension with `pnpm build:zip`
+   - This will create a versioned zip file (e.g., `snoozr-v1.1.1.zip`) based on the version in your manifest
+   - To specify a custom output directory: `pnpm build:zip -- -o path/to/directory`
+2. 📤 Upload the generated zip file to the Chrome Web Store Developer Dashboard
