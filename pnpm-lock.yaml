@@ -8,6 +8,9 @@ dependencies:
   '@tanstack/react-router':
     specifier: ^1.114.25
     version: 1.114.25(react-dom@19.0.0)(react@19.0.0)
+  lucide-react:
+    specifier: ^0.487.0
+    version: 0.487.0(react@19.0.0)
   react:
     specifier: ^19.0.0
     version: 19.0.0
@@ -3874,6 +3877,14 @@ packages:
     dependencies:
       yallist: 4.0.0
     dev: true
+
+  /lucide-react@0.487.0(react@19.0.0):
+    resolution: {integrity: sha512-aKqhOQ+YmFnwq8dWgGjOuLc8V1R9/c/yOd+zDY4+ohsR2Jo05lSGc3WsstYPIzcTpeosN7LoCkLReUUITvaIvw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      react: 19.0.0
+    dev: false
 
   /magic-string@0.26.7:
     resolution: {integrity: sha512-hX9XH3ziStPoPhJxLq1syWuZMxbDvGNbVchfrdCtanC7D13888bMFow61x8axrx+GfHLtVeAx2kxL7tTGRl+Ow==}

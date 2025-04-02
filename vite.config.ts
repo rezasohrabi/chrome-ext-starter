@@ -40,6 +40,19 @@ export default defineConfig({
       '@assets': resolve(__dirname, './src/assets'),
     },
   },
+  server: {
+    cors: {
+      origin: ['chrome-extension://*'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      credentials: true,
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-Requested-With',
+    },
+  },
   build: {
     rollupOptions: {
       input: {
