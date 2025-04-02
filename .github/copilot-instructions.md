@@ -14,7 +14,7 @@ When suggesting code changes or new features, please ensure they follow these co
 Our file structure separates concerns by feature:
 
 - `src/background/` contains service worker code
-- `src/content/` contains content scripts that run in webpage contexts
+- `src/content/` contains content scripts that run in webpage contexts (removed for now as not required)
 - `src/popup/` contains the extension popup UI
 - `src/options/` contains the options page UI
 - `src/utils/` contains shared utility functions

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark';
+type Theme = 'silk' | 'dark';
 
 /**
  * Custom hook for managing theme state across the extension
@@ -11,7 +11,7 @@ const useTheme = (): {
   theme: Theme;
   toggleTheme: () => void;
 } => {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>('silk');
 
   // Load theme from storage or use system preference
   useEffect(() => {
@@ -24,7 +24,7 @@ const useTheme = (): {
           const prefersDark = window.matchMedia(
             '(prefers-color-scheme: dark)'
           ).matches;
-          const systemTheme = prefersDark ? 'dark' : 'light';
+          const systemTheme = prefersDark ? 'dark' : 'silk';
           setTheme(systemTheme);
           document.documentElement.setAttribute('data-theme', systemTheme);
         } else {
@@ -33,8 +33,8 @@ const useTheme = (): {
         }
       } catch (error) {
         // Use light theme as fallback
-        setTheme('light');
-        document.documentElement.setAttribute('data-theme', 'light');
+        setTheme('silk');
+        document.documentElement.setAttribute('data-theme', 'silk');
       }
     };
 
@@ -48,7 +48,7 @@ const useTheme = (): {
         const { theme: savedTheme } = await chrome.storage.local.get('theme');
         // Only update if user hasn't explicitly set a preference
         if (!savedTheme) {
-          const newTheme = e.matches ? 'dark' : 'light';
+          const newTheme = e.matches ? 'dark' : 'silk';
           setTheme(newTheme);
           document.documentElement.setAttribute('data-theme', newTheme);
         }
@@ -63,7 +63,7 @@ const useTheme = (): {
 
   // Toggle theme function
   const toggleTheme = (): void => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme === 'silk' ? 'dark' : 'silk';
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     // Save theme preference

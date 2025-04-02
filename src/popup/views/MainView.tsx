@@ -152,10 +152,10 @@ function MainView(): React.ReactElement {
   }
 
   return (
-    <div className='card w-80 bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-80 shadow-xl'>
       <div className='card-body p-5'>
         <div className='mb-4 flex items-center justify-between'>
-          <h2 className='card-title flex items-center text-primary'>
+          <h2 className='card-title text-primary flex items-center'>
             <svg
               className='mr-2 h-6 w-6'
               viewBox='0 0 24 24'
@@ -182,26 +182,30 @@ function MainView(): React.ReactElement {
             type='button'
             className='btn btn-circle btn-ghost btn-sm'
             onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'silk' ? '🌙' : '☀️'}
           </button>
         </div>
 
         {activeTab && (
-          <div className='mb-4 flex items-center rounded-lg bg-base-100 p-3 shadow-sm'>
-            {activeTab.favIconUrl && (
-              <img
-                src={activeTab.favIconUrl}
-                alt='Tab favicon'
-                className='mr-3 h-5 w-5'
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            )}
-            <div className='truncate text-sm font-medium'>
-              {activeTab.title}
+          <div className='card card-border'>
+            <div className='card-body'>
+              <div className='mb-2 flex items-center'>
+                {activeTab.favIconUrl && (
+                  <img
+                    src={activeTab.favIconUrl}
+                    alt='Tab favicon'
+                    className='mr-3 h-5 w-5'
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+                <span className='truncate text-sm font-medium'>
+                  {activeTab.title}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -211,12 +215,12 @@ function MainView(): React.ReactElement {
             <div key={option.id} className='card'>
               <button
                 type='button'
-                className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+                className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
                 onClick={() => handleSnooze(option)}
               >
                 {option.icon && (
                   <option.icon
-                    className='mr-2 h-5 w-5 text-accent'
+                    className='text-accent mr-2 h-5 w-5'
                     strokeWidth={2}
                   />
                 )}
@@ -229,10 +233,10 @@ function MainView(): React.ReactElement {
           <div className='card'>
             <Link
               to='/custom-snooze'
-              className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
               viewTransition={{ types: ['slide-left'] }}
             >
-              <Calendar className='mr-2 h-5 w-5 text-accent' strokeWidth={2} />
+              <Calendar className='text-accent mr-2 h-5 w-5' strokeWidth={2} />
               Pick a Date/Time
             </Link>
           </div>
@@ -241,10 +245,10 @@ function MainView(): React.ReactElement {
           <div className='card'>
             <Link
               to='/recurring-snooze'
-              className='btn btn-block justify-start border-base-300 bg-base-200 hover:bg-base-300'
+              className='btn btn-block border-base-300 bg-base-200 hover:bg-base-300 justify-start'
               viewTransition={{ types: ['slide-left'] }}
             >
-              <RotateCcw className='mr-2 h-5 w-5 text-accent' strokeWidth={2} />
+              <RotateCcw className='text-accent mr-2 h-5 w-5' strokeWidth={2} />
               Recurring Snooze
             </Link>
           </div>

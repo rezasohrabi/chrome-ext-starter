@@ -149,10 +149,10 @@ function Options(): React.ReactElement {
   );
 
   const renderEmptyState = (): React.ReactElement => (
-    <div className='card w-full bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-full shadow-xl'>
       <div className='card-body text-center'>
         <h2 className='card-title justify-center'>
-          <AlertCircle className='mr-2 h-5 w-5 text-warning' strokeWidth={2} />
+          <AlertCircle className='text-warning mr-2 h-5 w-5' strokeWidth={2} />
           No Snoozed Tabs
         </h2>
         <p>
@@ -164,10 +164,10 @@ function Options(): React.ReactElement {
   );
 
   const renderTabsTable = (): React.ReactElement => (
-    <div className='card w-full bg-base-100 shadow-xl'>
+    <div className='card bg-base-100 w-full shadow-xl'>
       <div className='card-body p-0'>
         <div className='w-full overflow-x-auto'>
-          <table className='table table-zebra w-full'>
+          <table className='table-zebra table w-full'>
             <thead>
               <tr>
                 <th className='w-1/4'>Tab</th>
@@ -195,7 +195,7 @@ function Options(): React.ReactElement {
                         <img
                           src={tab.favicon}
                           alt='Tab favicon'
-                          className='h-5 w-5 flex-shrink-0'
+                          className='h-5 w-5 shrink-0'
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
@@ -211,7 +211,7 @@ function Options(): React.ReactElement {
                         {tab.isRecurring && (
                           <div className='tooltip' data-tip='Recurring snooze'>
                             <RotateCcw
-                              className='ml-1.5 h-3.5 w-3.5 text-accent'
+                              className='text-accent ml-1.5 h-3.5 w-3.5'
                               strokeWidth={2.5}
                             />
                           </div>
@@ -273,16 +273,15 @@ function Options(): React.ReactElement {
         <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
         <button
           type='button'
-          className='btn btn-outline'
+          className={`btn btn-circle btn-ghost text-${theme === 'silk' ? 'gray' : 'yellow'}-500`}
           onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
         >
-          {theme === 'light' ? (
-            <Moon className='mr-2 h-4 w-4' strokeWidth={2} />
+          {theme === 'silk' ? (
+            <Moon className='mr-2 h-4 w-4' strokeWidth={3} />
           ) : (
-            <Sun className='mr-2 h-4 w-4' strokeWidth={2} />
+            <Sun className='mr-2 h-4 w-4' strokeWidth={3} />
           )}
-          {theme === 'light' ? 'Dark' : 'Light'} Mode
         </button>
       </div>
       {content}
