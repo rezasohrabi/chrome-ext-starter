@@ -41,16 +41,19 @@ export default defineConfig({
     },
   },
   server: {
-    cors: {
-      origin: ['chrome-extension://*'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      credentials: true,
-    },
+    cors: true, // Set to true to allow all origins during development
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers':
         'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+    hmr: {
+      // Force the HMR websocket to use the same protocol as the page
+      // This allows Chrome extension pages to connect to the WebSocket
+      protocol: 'ws',
+      host: 'localhost',
     },
   },
   build: {
