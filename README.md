@@ -1,4 +1,4 @@
-# 🚀 Chrome Extension Starter Kit – Contribute & Make It Even Better! 🎉
+# 🚀 Chrome Extension Starter Kit 
 
 Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.
 
