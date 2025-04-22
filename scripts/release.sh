@@ -56,6 +56,6 @@ if gh release view $VERSION >/dev/null 2>&1; then
 fi
 
 echo "Creating GitHub release and uploading artefact..."
-gh release create $VERSION $ZIP_FILE --generate-notes --latest --fail-on-no-commit
+gh release create $VERSION $ZIP_FILE --generate-notes --latest --fail-on-no-commits
 
 echo "Release $VERSION created and artefact uploaded."
