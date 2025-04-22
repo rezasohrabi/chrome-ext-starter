@@ -1,4 +1,5 @@
-import { RecurrencePattern, SnoozedTab } from '../types';
+import { SnoozedTab } from '../types';
+import { calculateNextWakeTime as calculateNextWakeTimeUtil } from '../utils/recurrence';
 
 // Initialize extension when installed
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -22,94 +23,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.action.openPopup();
   }
 });
-
-// Calculate the next occurrence for a recurring tab
-function calculateNextWakeTime(
-  recurrencePattern: RecurrencePattern
-): number | null {
-  const now = new Date();
-  const [hours, minutes] = recurrencePattern.time.split(':').map(Number);
-
-  // Check if we've reached the end date
-  if (recurrencePattern.endDate && now.getTime() >= recurrencePattern.endDate) {
-    return null; // No more occurrences
-  }
-
-  const nextWakeTime = new Date();
-  nextWakeTime.setHours(hours, minutes, 0, 0);
-
-  switch (recurrencePattern.type) {
-    case 'daily':
-      // Set to tomorrow if today's time has passed
-      if (nextWakeTime.getTime() <= now.getTime()) {
-        nextWakeTime.setDate(nextWakeTime.getDate() + 1);
-      }
-      break;
-
-    case 'weekdays': {
-      // Start from tomorrow and find next weekday
-      nextWakeTime.setDate(nextWakeTime.getDate() + 1);
-      while (nextWakeTime.getDay() === 0 || nextWakeTime.getDay() === 6) {
-        nextWakeTime.setDate(nextWakeTime.getDate() + 1);
-      }
-      break;
-    }
-
-    case 'weekly':
-    case 'custom': {
-      if (
-        !recurrencePattern.daysOfWeek ||
-        recurrencePattern.daysOfWeek.length === 0
-      ) {
-        return null; // No days selected
-      }
-
-      const currentDay = now.getDay();
-      const sortedDays = [...recurrencePattern.daysOfWeek].sort(
-        (a, b) => a - b
-      );
-
-      // Find the next day in our selected days
-      const nextDayIndex = sortedDays.findIndex((day) => day > currentDay);
-
-      if (nextDayIndex !== -1) {
-        // We found a day later this week
-        const daysToAdd = sortedDays[nextDayIndex] - currentDay;
-        nextWakeTime.setDate(now.getDate() + daysToAdd);
-      } else {
-        // All selected days are earlier in the week, go to next week
-        const daysToAdd = 7 - currentDay + sortedDays[0];
-        nextWakeTime.setDate(now.getDate() + daysToAdd);
-      }
-
-      // If the time already passed today and it's the same day, set to next week
-      if (
-        nextWakeTime.getDay() === currentDay &&
-        nextWakeTime.getTime() <= now.getTime()
-      ) {
-        nextWakeTime.setDate(nextWakeTime.getDate() + 7);
-      }
-      break;
-    }
-
-    case 'monthly': {
-      // Set to the specified day of month
-      nextWakeTime.setDate(recurrencePattern.dayOfMonth || 1);
-
-      // If the day has already passed this month, set to next month
-      if (nextWakeTime.getTime() <= now.getTime()) {
-        nextWakeTime.setMonth(nextWakeTime.getMonth() + 1);
-      }
-      break;
-    }
-
-    default:
-      // Default case for unknown recurrence types
-      return null;
-  }
-
-  return nextWakeTime.getTime();
-}
 
 // Handle alarms when they go off
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -143,7 +56,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         // Check if this is a recurring tab
         if (snoozedTab.isRecurring && snoozedTab.recurrencePattern) {
           // Calculate the next wake time for this recurring tab
-          const nextWakeTime = calculateNextWakeTime(
+          const nextWakeTime = calculateNextWakeTimeUtil(
             snoozedTab.recurrencePattern
           );
 
@@ -220,7 +133,9 @@ chrome.runtime.onStartup.addListener(async () => {
 
           // If it's a recurring tab, schedule the next occurrence
           if (tab.isRecurring && tab.recurrencePattern) {
-            const nextWakeTime = calculateNextWakeTime(tab.recurrencePattern);
+            const nextWakeTime = calculateNextWakeTimeUtil(
+              tab.recurrencePattern
+            );
 
             if (nextWakeTime) {
               // Create a new tab entry with updated wake time

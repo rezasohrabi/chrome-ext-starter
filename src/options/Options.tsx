@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { SnoozedTab } from '../types';
+import { calculateNextWakeTime } from '../utils/recurrence';
 import useTheme from '../utils/useTheme';
 
 // Defining the component as a function declaration per ESLint rule
@@ -47,14 +48,32 @@ function Options(): React.ReactElement {
   const wakeTabNow = async (tab: SnoozedTab): Promise<void> => {
     try {
       if (tab.url) {
-        // Create a new tab with the snoozed URL
+        // Open the tab immediately
         await chrome.tabs.create({ url: tab.url });
-        // Remove the tab from storage
-        const updatedTabs = snoozedTabItems.filter((t) => t.id !== tab.id);
-        await chrome.storage.local.set({ snoozedTabs: updatedTabs });
-        // Cancel the alarm
+        // Cancel the current alarm
         await chrome.alarms.clear(`snoozed-tab-${tab.id}`);
-        // Update state
+        const updatedTabs = snoozedTabItems.filter((t) => t.id !== tab.id);
+        // If recurring, skip to the next occurrence instead of removing
+        if (tab.isRecurring && tab.recurrencePattern) {
+          // Get the next occurrence after the current one
+          const nextWake = calculateNextWakeTime(
+            tab.recurrencePattern,
+            new Date(tab.wakeTime + 1) // +1ms to ensure we skip the current
+          );
+          if (nextWake) {
+            const newTabId = Date.now();
+            const updatedTab: SnoozedTab = {
+              ...tab,
+              id: newTabId,
+              wakeTime: nextWake,
+            };
+            updatedTabs.push(updatedTab);
+            await chrome.alarms.create(`snoozed-tab-${newTabId}`, {
+              when: nextWake,
+            });
+          }
+        }
+        await chrome.storage.local.set({ snoozedTabs: updatedTabs });
         setSnoozedTabs(updatedTabs);
       }
     } catch (error) {
