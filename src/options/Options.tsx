@@ -141,6 +141,17 @@ function Options(): React.ReactElement {
     return `${minutes}m`;
   };
 
+  // Opens the snoozed tab in a new tab without waking it up
+  const openTabInNewTab = async (tab: SnoozedTab): Promise<void> => {
+    if (tab.url) {
+      try {
+        await chrome.tabs.create({ url: tab.url });
+      } catch (error) {
+        // Silently handle error
+      }
+    }
+  };
+
   // Rendering helpers using DaisyUI components
   const renderLoading = (): React.ReactElement => (
     <div className='p-8 text-center'>
@@ -202,12 +213,14 @@ function Options(): React.ReactElement {
                         />
                       )}
                       <div className='flex items-center'>
-                        <div
-                          className='max-w-[160px] truncate sm:max-w-[220px]'
+                        <button
+                          type='button'
+                          className='link link-primary max-w-[160px] truncate text-left sm:max-w-[220px]'
                           title={tab.title || tab.url}
+                          onClick={() => openTabInNewTab(tab)}
                         >
                           {tab.title || tab.url || 'Unknown tab'}
-                        </div>
+                        </button>
                         {tab.isRecurring && (
                           <div className='tooltip' data-tip='Recurring snooze'>
                             <RotateCcw
