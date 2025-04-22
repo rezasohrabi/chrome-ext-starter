@@ -58,6 +58,19 @@ const manifestContent = manifestContentRaw.replace(
 fs.writeFileSync(manifestPath, manifestContent, 'utf8');
 console.log(`Bumped version in manifest.ts to ${newVersion}`);
 
+// Commit and push the manifest change
+try {
+  execSync('git add src/manifest.ts', { stdio: 'inherit' });
+  execSync(`git commit -m "chore: bump version to v${newVersion}"`, {
+    stdio: 'inherit',
+  });
+  execSync('git push', { stdio: 'inherit' });
+  console.log('Committed and pushed manifest version bump.');
+} catch (err) {
+  console.error('Failed to commit and push manifest version bump.');
+  process.exit(1);
+}
+
 console.log('Running pnpm build:zip...');
 try {
   execSync('pnpm build:zip', { stdio: 'inherit' });
