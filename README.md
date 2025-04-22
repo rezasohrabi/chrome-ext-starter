@@ -37,11 +37,17 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 
 > The release script requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
 
-1. ✏️ **Bump the version** in `src/manifest.ts` to match the new release version
-2. 🏗️ **Build and package the extension** with `pnpm build:zip`
-3. 🤖 **Run the release script**:
-   - Run `./scripts/release.sh vX.Y.Z` (replace with your version)
+1. ✏️ **Bump the version and build the zip** automatically:
+   - Run `pnpm bump-and-build <patch|minor|major|x.y.z>`
    - This will:
+     - Bump the version in `src/manifest.ts` (using [semver](https://www.npmjs.com/package/semver))
+     - Run `pnpm build:zip` to generate the release artefact
+2. 🤖 **Run the release script**:
+   - Run `./scripts/release.sh`
+   - This will:
+     - Read the version from `src/manifest.ts`
      - Tag the release in git and push the tag
      - Create a GitHub release and upload the generated zip file as the artefact
-4. 📤 **Upload the generated zip** file to the Chrome Web Store Developer Dashboard
+3. 📤 **Upload the generated zip** file to the Chrome Web Store Developer Dashboard
+
+> Example: `pnpm bump-and-build minor` will bump the minor version, update the manifest, and build the zip.

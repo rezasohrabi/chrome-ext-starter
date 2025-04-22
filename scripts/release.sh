@@ -1,17 +1,29 @@
 #!/bin/zsh
 # scripts/release.sh
-# Usage: ./scripts/release.sh vX.Y.Z
+# Usage: ./scripts/release.sh [vX.Y.Z]
+# If no version is provided, the script will read the version from src/manifest.ts
 # This script tags the release, pushes the tag, and creates a GitHub release with the build artefact.
 
 set -e
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 vX.Y.Z"
-  exit 1
+  # Extract version from manifest.ts
+  VERSION=$(grep -oE "version: '[0-9]+\\.[0-9]+\\.[0-9]+'" src/manifest.ts | grep -oE '[0-9]+\\.[0-9]+\\.[0-9]+')
+  if [ -z "$VERSION" ]; then
+    echo "Could not extract version from src/manifest.ts"
+    exit 1
+  fi
+  VERSION="v$VERSION"
+else
+  VERSION=$1
 fi
 
-VERSION=$1
 ZIP_FILE="snoozr-${VERSION}.zip"
+ZIP_FILE_ALT="snoozr-${VERSION#v}.zip"
+
+if [ -f "$ZIP_FILE_ALT" ]; then
+  ZIP_FILE="$ZIP_FILE_ALT"
+fi
 
 if [ ! -f "$ZIP_FILE" ]; then
   echo "Error: $ZIP_FILE not found. Build and package the extension first."

@@ -12,7 +12,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "preinstall": "npx only-allow pnpm",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "bump-and-build": "tsx scripts/bump-and-build.ts"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.114.25",
@@ -31,6 +32,7 @@
     "@types/node": "^20.12.2",
     "@types/react": "^19.0.11",
     "@types/react-dom": "^19.0.4",
+    "@types/semver": "^7.7.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
@@ -51,6 +53,7 @@
     "prettier": "^3.2.5",
     "prettier-plugin-css-order": "^2.1.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "semver": "^7.7.1",
     "tailwindcss": "^4.1.1",
     "typescript": "^5.4.3",
     "vite": "^5.2.7",
