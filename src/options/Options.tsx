@@ -196,7 +196,7 @@ function Options(): React.ReactElement {
   const renderTabsTable = (): React.ReactElement => (
     <div className='card bg-base-100 w-full shadow-xl'>
       <div className='card-body p-0'>
-        <div className='w-full overflow-x-auto'>
+        <div className='-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6'>
           <table className='table-zebra table w-full'>
             <thead>
               <tr>
