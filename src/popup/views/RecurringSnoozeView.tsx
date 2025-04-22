@@ -107,17 +107,25 @@ function RecurringSnoozeView(): React.ReactElement {
     // For weekly or custom days, find the next occurrence
     if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
       const currentDay = now.getDay();
-      // Find the next day in our selected days
-      const nextDayIndex = selectedDays.findIndex((day) => day > currentDay);
-
-      if (nextDayIndex !== -1) {
-        // We found a day later this week
-        const daysToAdd = selectedDays[nextDayIndex] - currentDay;
-        firstWakeTime.setDate(now.getDate() + daysToAdd);
-      } else if (selectedDays.length > 0) {
-        // All selected days are earlier in the week, go to next week
-        const daysToAdd = 7 - currentDay + selectedDays[0];
-        firstWakeTime.setDate(now.getDate() + daysToAdd);
+      // If today is a selected day and the time is still in the future, use today
+      if (
+        selectedDays.includes(currentDay) &&
+        firstWakeTime.getTime() > now.getTime()
+      ) {
+        // Do nothing, firstWakeTime is already set to today at the right time
+      } else {
+        // Find the next selected day
+        const sortedDays = [...selectedDays].sort((a, b) => a - b);
+        const nextDayIndex = sortedDays.findIndex((day) => day > currentDay);
+        if (nextDayIndex !== -1) {
+          // We found a day later this week
+          const daysToAdd = sortedDays[nextDayIndex] - currentDay;
+          firstWakeTime.setDate(now.getDate() + daysToAdd);
+        } else if (sortedDays.length > 0) {
+          // All selected days are earlier in the week, go to next week
+          const daysToAdd = 7 - currentDay + sortedDays[0];
+          firstWakeTime.setDate(now.getDate() + daysToAdd);
+        }
       }
     }
 

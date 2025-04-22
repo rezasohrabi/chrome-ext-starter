@@ -68,26 +68,25 @@ function calculateNextWakeTime(
       const sortedDays = [...recurrencePattern.daysOfWeek].sort(
         (a, b) => a - b
       );
-
-      // Find the next day in our selected days
-      const nextDayIndex = sortedDays.findIndex((day) => day > currentDay);
-
-      if (nextDayIndex !== -1) {
-        // We found a day later this week
-        const daysToAdd = sortedDays[nextDayIndex] - currentDay;
-        nextWakeTime.setDate(now.getDate() + daysToAdd);
-      } else {
-        // All selected days are earlier in the week, go to next week
-        const daysToAdd = 7 - currentDay + sortedDays[0];
-        nextWakeTime.setDate(now.getDate() + daysToAdd);
-      }
-
-      // If the time already passed today and it's the same day, set to next week
+      // If today is a selected day and the time is still in the future, use today
       if (
-        nextWakeTime.getDay() === currentDay &&
-        nextWakeTime.getTime() <= now.getTime()
+        sortedDays.includes(currentDay) &&
+        nextWakeTime.getTime() > now.getTime()
       ) {
-        nextWakeTime.setDate(nextWakeTime.getDate() + 7);
+        // Do nothing, nextWakeTime is already set to today at the right time
+      } else {
+        // Find the next selected day
+        const nextDayIndex = sortedDays.findIndex((day) => day > currentDay);
+
+        if (nextDayIndex !== -1) {
+          // We found a day later this week
+          const daysToAdd = sortedDays[nextDayIndex] - currentDay;
+          nextWakeTime.setDate(now.getDate() + daysToAdd);
+        } else {
+          // All selected days are earlier in the week, go to next week
+          const daysToAdd = 7 - currentDay + sortedDays[0];
+          nextWakeTime.setDate(now.getDate() + daysToAdd);
+        }
       }
       break;
     }
