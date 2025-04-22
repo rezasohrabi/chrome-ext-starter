@@ -35,7 +35,7 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 
 ## Releasing to Chrome Web Store
 
-You can automate the release process (except uploading to the Chrome Web Store) with the provided script:
+> The release script requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
 
 1. ✏️ **Bump the version** in `src/manifest.ts` to match the new release version
 2. 🏗️ **Build and package the extension** with `pnpm build:zip`
@@ -45,5 +45,3 @@ You can automate the release process (except uploading to the Chrome Web Store) 
      - Tag the release in git and push the tag
      - Create a GitHub release and upload the generated zip file as the artefact
 4. 📤 **Upload the generated zip** file to the Chrome Web Store Developer Dashboard
-
-> The release script requires the GitHub CLI (`gh`) to be installed and authenticated.
