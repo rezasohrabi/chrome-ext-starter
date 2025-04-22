@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 
 import { RecurrencePattern, SnoozedTab } from '../../types';
+import { calculateNextWakeTime } from '../../utils/recurrence';
 
 // Accessible Form Control component using function declaration with destructured props
 function FormControl({
@@ -84,65 +85,21 @@ function RecurringSnoozeView(): React.ReactElement {
   const handleSnooze = async (): Promise<void> => {
     if (!activeTab || !activeTab.id) return;
 
-    // Calculate the first wake time
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    const firstWakeTime = new Date();
-    firstWakeTime.setHours(hours, minutes, 0, 0);
-
-    // If the time is already past today, set to tomorrow
-    if (firstWakeTime.getTime() < now.getTime()) {
-      firstWakeTime.setDate(firstWakeTime.getDate() + 1);
-    }
-
-    // For monthly, set to the correct day of month
-    if (recurrenceType === 'monthly') {
-      firstWakeTime.setDate(dayOfMonth);
-      // If the day has already passed this month, set to next month
-      if (firstWakeTime.getTime() < now.getTime()) {
-        firstWakeTime.setMonth(firstWakeTime.getMonth() + 1);
-      }
-    }
-
-    // For weekly or custom days, find the next occurrence
-    if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
-      const currentDay = now.getDay();
-      // If today is a selected day and the time is still in the future, use today
-      if (
-        selectedDays.includes(currentDay) &&
-        firstWakeTime.getTime() > now.getTime()
-      ) {
-        // Do nothing, firstWakeTime is already set to today at the right time
-      } else {
-        // Find the next selected day
-        const sortedDays = [...selectedDays].sort((a, b) => a - b);
-        const nextDayIndex = sortedDays.findIndex((day) => day > currentDay);
-        if (nextDayIndex !== -1) {
-          // We found a day later this week
-          const daysToAdd = sortedDays[nextDayIndex] - currentDay;
-          firstWakeTime.setDate(now.getDate() + daysToAdd);
-        } else if (sortedDays.length > 0) {
-          // All selected days are earlier in the week, go to next week
-          const daysToAdd = 7 - currentDay + sortedDays[0];
-          firstWakeTime.setDate(now.getDate() + daysToAdd);
-        }
-      }
-    }
-
     // Create the recurrence pattern
     const recurrencePattern: RecurrencePattern = {
       type: recurrenceType,
       time,
       daysOfWeek: selectedDays,
     };
-
     if (recurrenceType === 'monthly') {
       recurrencePattern.dayOfMonth = dayOfMonth;
     }
-
     if (endDate) {
       recurrencePattern.endDate = new Date(endDate).getTime();
     }
+
+    const firstWakeTimeMs = calculateNextWakeTime(recurrencePattern);
+    if (!firstWakeTimeMs) return;
 
     const tabInfo: SnoozedTab = {
       id: activeTab.id,
@@ -150,7 +107,7 @@ function RecurringSnoozeView(): React.ReactElement {
       title: activeTab.title,
       favicon: activeTab.favIconUrl,
       createdAt: Date.now(),
-      wakeTime: firstWakeTime.getTime(),
+      wakeTime: firstWakeTimeMs,
       isRecurring: true,
       recurrencePattern,
     };
@@ -163,7 +120,7 @@ function RecurringSnoozeView(): React.ReactElement {
 
       // Create alarm for this tab
       await chrome.alarms.create(`snoozed-tab-${tabInfo.id}`, {
-        when: firstWakeTime.getTime(),
+        when: firstWakeTimeMs,
       });
 
       // Close the tab
