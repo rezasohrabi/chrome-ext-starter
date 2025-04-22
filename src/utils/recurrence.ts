@@ -7,9 +7,9 @@ import { RecurrencePattern } from '../types';
  */
 export function calculateNextWakeTime(
   recurrencePattern: RecurrencePattern,
-  nowOverride?: Date // for testing
+  afterDate?: Date
 ): number | null {
-  const now = nowOverride || new Date();
+  const now = afterDate || new Date();
   const [hours, minutes] = recurrencePattern.time.split(':').map(Number);
 
   // Check if we've reached the end date
@@ -17,7 +17,8 @@ export function calculateNextWakeTime(
     return null; // No more occurrences
   }
 
-  const nextWakeTime = new Date();
+  // Set nextWakeTime to the afterDate (or now) as the base date
+  const nextWakeTime = new Date(now.getTime());
   nextWakeTime.setHours(hours, minutes, 0, 0);
 
   switch (recurrencePattern.type) {
