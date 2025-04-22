@@ -35,7 +35,13 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 
 ## Releasing to Chrome Web Store
 
-1. 🏗️ Build and package the extension with `pnpm build:zip`
+1. ✏️ **Bump the version** in `src/manifest.ts` to match the new release version
+2. 🏗️ **Build and package the extension** with `pnpm build:zip`
    - This will create a versioned zip file (e.g., `snoozr-v1.1.1.zip`) based on the version in your manifest
    - To specify a custom output directory: `pnpm build:zip -- -o path/to/directory`
-2. 📤 Upload the generated zip file to the Chrome Web Store Developer Dashboard
+3. 🏷️ **Tag the release in git**:
+   - Run `git tag vX.Y.Z` (replace with your version)
+   - Run `git push origin vX.Y.Z` to push the tag to the remote repository
+4. 🚀 **Create a release on GitHub**:
+   - You can do this via the GitHub web UI or using the CLI (`gh release create vX.Y.Z`)
+5. 📤 **Upload the generated zip** file to the Chrome Web Store Developer Dashboard
