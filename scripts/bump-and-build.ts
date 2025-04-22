@@ -17,7 +17,10 @@ if (process.argv.length < 3) {
 
 const bumpType = process.argv[2];
 const allowedBumps = ['patch', 'minor', 'major'];
-const manifestPath = path.resolve(__dirname, '../src/manifest.ts');
+
+// Use ESM-compatible directory resolution
+const dirname = new URL('.', import.meta.url).pathname;
+const manifestPath = path.resolve(dirname, '../src/manifest.ts');
 
 const manifestContentRaw = fs.readFileSync(manifestPath, 'utf8');
 const versionRegex = /version:\s*['"]([0-9]+\.[0-9]+\.[0-9]+)['"]/;
