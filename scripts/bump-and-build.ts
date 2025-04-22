@@ -79,6 +79,4 @@ try {
   process.exit(1);
 }
 
-console.log(
-  `\nNext: Run ./scripts/release.sh v${newVersion} to tag and release.`
-);
+console.log(`\nNext: Run ./scripts/release.sh to tag and release to github.`);
