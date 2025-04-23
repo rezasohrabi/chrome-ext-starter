@@ -5,9 +5,7 @@ import {
   Clock,
   Github,
   Lightbulb,
-  Moon,
   RotateCcw,
-  Sun,
   Sunrise,
   Trash2,
 } from 'lucide-react';
@@ -16,12 +14,10 @@ import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
 import { SnoozrSettings } from '../utils/settings';
 import useSettings from '../utils/useSettings';
-import useTheme from '../utils/useTheme';
 
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
-  const { theme, toggleTheme } = useTheme();
 
   // Moved loadSnoozedTabs before its usage to fix hoisting issue
   const loadSnoozedTabs = async (): Promise<void> => {
@@ -195,98 +191,91 @@ function Options(): React.ReactElement {
   );
 
   const renderTabsTable = (): React.ReactElement => (
-    <div className='card bg-base-100 w-full shadow-xl'>
-      <div className='card-body p-0'>
-        <div className='-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6'>
-          <table className='table-zebra table w-full'>
-            <thead>
-              <tr>
-                <th className='w-1/4'>Tab</th>
-                <th className='w-1/4'>
+    <div className='overflow-x-auto px-0 sm:px-0 md:overflow-x-visible'>
+      <table className='table-zebra table w-full min-w-[700px] md:min-w-0'>
+        <thead>
+          <tr>
+            <th className='w-1/4'>Tab</th>
+            <th className='w-1/4'>
+              <div className='flex items-center'>
+                <AlarmClock className='mr-1 h-4 w-4' strokeWidth={2} />
+                Snooze Until
+              </div>
+            </th>
+            <th className='w-1/6'>
+              <div className='flex items-center'>
+                <Clock className='mr-1 h-4 w-4' strokeWidth={2} />
+                Time Left
+              </div>
+            </th>
+            <th className='w-1/3 text-right'>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {snoozedTabItems.map((tab) => (
+            <tr key={tab.id}>
+              <td>
+                <div className='flex items-center space-x-2'>
+                  {tab.favicon && (
+                    <img
+                      src={tab.favicon}
+                      alt='Tab favicon'
+                      className='h-5 w-5 shrink-0'
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
                   <div className='flex items-center'>
-                    <AlarmClock className='mr-1 h-4 w-4' strokeWidth={2} />
-                    Snooze Until
-                  </div>
-                </th>
-                <th className='w-1/6'>
-                  <div className='flex items-center'>
-                    <Clock className='mr-1 h-4 w-4' strokeWidth={2} />
-                    Time Left
-                  </div>
-                </th>
-                <th className='w-1/3'>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {snoozedTabItems.map((tab) => (
-                <tr key={tab.id}>
-                  <td>
-                    <div className='flex items-center space-x-2'>
-                      {tab.favicon && (
-                        <img
-                          src={tab.favicon}
-                          alt='Tab favicon'
-                          className='h-5 w-5 shrink-0'
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
+                    <button
+                      type='button'
+                      className='link link-primary max-w-[160px] truncate text-left sm:max-w-[220px]'
+                      title={tab.title || tab.url}
+                      onClick={() => openTabInNewTab(tab)}
+                    >
+                      {tab.title || tab.url || 'Unknown tab'}
+                    </button>
+                    {tab.isRecurring && (
+                      <div className='tooltip' data-tip='Recurring snooze'>
+                        <RotateCcw
+                          className='text-accent ml-1.5 h-3.5 w-3.5'
+                          strokeWidth={2.5}
                         />
-                      )}
-                      <div className='flex items-center'>
-                        <button
-                          type='button'
-                          className='link link-primary max-w-[160px] truncate text-left sm:max-w-[220px]'
-                          title={tab.title || tab.url}
-                          onClick={() => openTabInNewTab(tab)}
-                        >
-                          {tab.title || tab.url || 'Unknown tab'}
-                        </button>
-                        {tab.isRecurring && (
-                          <div className='tooltip' data-tip='Recurring snooze'>
-                            <RotateCcw
-                              className='text-accent ml-1.5 h-3.5 w-3.5'
-                              strokeWidth={2.5}
-                            />
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </td>
-                  <td className='whitespace-normal'>
-                    {formatHumanFriendlyDate(tab.wakeTime)}
-                  </td>
-                  <td>{calculateTimeLeft(tab.wakeTime)}</td>
-                  <td>
-                    <div className='flex space-x-2'>
-                      <button
-                        type='button'
-                        className='btn btn-primary btn-sm'
-                        onClick={() => wakeTabNow(tab)}
-                      >
-                        <Sunrise className='mr-1 h-4 w-4' strokeWidth={2} />
-                        Wake Now
-                      </button>
-                      <div
-                        className='tooltip tooltip-error'
-                        data-tip='Delete tab'
-                      >
-                        <button
-                          type='button'
-                          className='btn btn-outline btn-error btn-sm'
-                          onClick={() => removeTab(tab)}
-                          aria-label='Delete tab'
-                        >
-                          <Trash2 className='h-4 w-4' strokeWidth={2} />
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    )}
+                  </div>
+                </div>
+              </td>
+              <td className='whitespace-normal'>
+                {formatHumanFriendlyDate(tab.wakeTime)}
+              </td>
+              <td>{calculateTimeLeft(tab.wakeTime)}</td>
+              <td className='text-right'>
+                <div className='flex justify-end space-x-2'>
+                  <button
+                    type='button'
+                    className='btn btn-primary btn-sm'
+                    onClick={() => wakeTabNow(tab)}
+                  >
+                    <Sunrise className='mr-1 h-4 w-4' strokeWidth={2} />
+                    Wake Now
+                  </button>
+                  <div className='tooltip tooltip-error' data-tip='Delete tab'>
+                    <button
+                      type='button'
+                      className='btn btn-outline btn-error btn-sm'
+                      onClick={() => removeTab(tab)}
+                      aria-label='Delete tab'
+                    >
+                      <Trash2 className='h-4 w-4' strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 
@@ -307,10 +296,18 @@ function Options(): React.ReactElement {
   };
 
   return (
-    <div className='container mx-auto max-w-2xl p-4'>
+    <div className='container mx-auto max-w-3xl p-4'>
       <div className='card bg-base-200 border-base-300 mb-8 border shadow-2xl'>
         <div className='card-body'>
-          <h2 className='card-title text-primary mb-2 text-2xl'>
+          <h1 className='card-title text-primary mb-2 text-2xl font-bold'>
+            Manage Snoozed Tabs
+          </h1>
+          {content}
+        </div>
+      </div>
+      <div className='card bg-base-200 border-base-300 mb-8 border shadow-2xl'>
+        <div className='card-body'>
+          <h2 className='card-title text-primary mb-2 text-2xl font-bold'>
             Snoozr Settings
           </h2>
           <p className='text-base-content/70 mb-4'>
@@ -459,23 +456,6 @@ function Options(): React.ReactElement {
           )}
         </div>
       </div>
-      <div className='mb-6 flex items-center justify-between'>
-        <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
-        <button
-          type='button'
-          className={`btn btn-circle btn-ghost text-${theme === 'silk' ? 'gray' : 'yellow'}-500`}
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'silk' ? (
-            <Moon className='mr-2 h-4 w-4' strokeWidth={3} />
-          ) : (
-            <Sun className='mr-2 h-4 w-4' strokeWidth={3} />
-          )}
-        </button>
-      </div>
-      {content}
-
       <div className='mt-6 text-center text-sm'>
         <div className='flex flex-col items-center justify-center gap-2'>
           <a
