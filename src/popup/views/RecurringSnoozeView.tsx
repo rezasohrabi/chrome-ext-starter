@@ -65,21 +65,24 @@ function RecurringSnoozeView(): React.ReactElement {
     getCurrentTab();
   }, []);
 
+  // Set default time and days based on settings
   useEffect(() => {
-    // Always default time to the current time (HH:MM)
     const now = new Date();
     setTime(
-      `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+      `${now.getHours().toString().padStart(2, '0')}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, '0')}`
     );
-    if (recurrenceType === 'daily') {
-      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
-    } else if (recurrenceType === 'weekdays') {
-      // Use settings.startOfWeekend to determine weekdays
+    setDayOfMonth(now.getDate());
+    if (recurrenceType === 'weekdays') {
       const weekend1 = settings.startOfWeekend;
       const weekend2 = (settings.startOfWeekend + 1) % 7;
       setSelectedDays(
         [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== weekend1 && d !== weekend2)
       );
+    } else if (recurrenceType === 'daily') {
+      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
     } else if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
       setSelectedDays([now.getDay()]);
     }
@@ -141,18 +144,6 @@ function RecurringSnoozeView(): React.ReactElement {
       window.close();
     });
   };
-
-  // Set default time and days based on settings
-  useEffect(() => {
-    setTime(settings.startOfDay);
-    if (recurrenceType === 'weekdays') {
-      setSelectedDays([1, 2, 3, 4, 5]);
-    } else if (recurrenceType === 'weekly') {
-      setSelectedDays([settings.startOfWeek]);
-    } else if (recurrenceType === 'custom') {
-      setSelectedDays([settings.startOfWeek, settings.startOfWeekend]);
-    }
-  }, [settings, recurrenceType]);
 
   if (loading) {
     return (
@@ -220,7 +211,37 @@ function RecurringSnoozeView(): React.ReactElement {
               aria-label='Recurrence Pattern'
             >
               <option value='daily'>Daily</option>
-              <option value='weekdays'>Weekdays (Mon-Fri)</option>
+              <option value='weekdays'>
+                Weekdays (
+                {[0, 1, 2, 3, 4, 5, 6]
+                  .filter(
+                    (d) =>
+                      d !== settings.startOfWeekend &&
+                      d !== (settings.startOfWeekend + 1) % 7
+                  )
+                  .map((d) => {
+                    switch (d) {
+                      case 0:
+                        return 'Sun';
+                      case 1:
+                        return 'Mon';
+                      case 2:
+                        return 'Tue';
+                      case 3:
+                        return 'Wed';
+                      case 4:
+                        return 'Thu';
+                      case 5:
+                        return 'Fri';
+                      case 6:
+                        return 'Sat';
+                      default:
+                        return '';
+                    }
+                  })
+                  .join(', ')}
+                )
+              </option>
               <option value='weekly'>Weekly</option>
               <option value='monthly'>Monthly</option>
               <option value='custom'>Custom</option>
@@ -245,22 +266,32 @@ function RecurringSnoozeView(): React.ReactElement {
                 role='group'
                 aria-labelledby={daysOfWeekId}
               >
-                {weekDays.map((day) => (
-                  <button
-                    key={day.value}
-                    type='button'
-                    className={`btn btn-circle btn-sm ${
-                      selectedDays.includes(day.value)
-                        ? 'btn-primary'
-                        : 'btn-outline'
-                    }`}
-                    onClick={() => toggleDay(day.value)}
-                    aria-label={`${day.label} day`}
-                    aria-pressed={selectedDays.includes(day.value)}
-                  >
-                    {day.label}
-                  </button>
-                ))}
+                {(() => {
+                  // Order days so that user's startOfWeek is first
+                  const orderedDays = Array.from(
+                    { length: 7 },
+                    (_, i) => (settings.startOfWeek + i) % 7
+                  );
+                  return orderedDays.map((d) => {
+                    const day = weekDays[d];
+                    return (
+                      <button
+                        key={day.value}
+                        type='button'
+                        className={`btn btn-circle btn-sm ${
+                          selectedDays.includes(day.value)
+                            ? 'btn-primary'
+                            : 'btn-outline'
+                        }`}
+                        onClick={() => toggleDay(day.value)}
+                        aria-label={`${day.label} day`}
+                        aria-pressed={selectedDays.includes(day.value)}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </FormControl>
           )}
