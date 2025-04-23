@@ -1,28 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import {
-  AlarmClock,
-  AlertCircle,
-  Clock,
-  Github,
-  Lightbulb,
-  Moon,
-  RotateCcw,
-  Sun,
-  Sunrise,
-  Trash2,
-} from 'lucide-react';
+import { AlertCircle, Github, Lightbulb } from 'lucide-react';
 
 import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
+import { SnoozrSettings } from '../utils/settings';
+import useSettings from '../utils/useSettings';
 import useTheme from '../utils/useTheme';
+import ManageSnoozedTabs from './ManageSnoozedTabs';
+import SnoozrSettingsCard from './SnoozrSettingsCard';
 
-// Defining the component as a function declaration per ESLint rule
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
-  const { theme, toggleTheme } = useTheme();
+  useTheme();
 
-  // Moved loadSnoozedTabs before its usage to fix hoisting issue
   const loadSnoozedTabs = async (): Promise<void> => {
     try {
       setLoading(true);
@@ -56,7 +47,7 @@ function Options(): React.ReactElement {
         // If recurring, skip to the next occurrence instead of removing
         if (tab.isRecurring && tab.recurrencePattern) {
           // Get the next occurrence after the current one
-          const nextWake = calculateNextWakeTime(
+          const nextWake = await calculateNextWakeTime(
             tab.recurrencePattern,
             new Date(tab.wakeTime + 1) // +1ms to ensure we skip the current
           );
@@ -171,153 +162,28 @@ function Options(): React.ReactElement {
     }
   };
 
-  // Rendering helpers using DaisyUI components
-  const renderLoading = (): React.ReactElement => (
-    <div className='p-8 text-center'>
-      <span className='loading loading-spinner loading-lg' />
-    </div>
-  );
+  const [settings, setSettings, settingsLoading] = useSettings();
 
-  const renderEmptyState = (): React.ReactElement => (
-    <div className='card bg-base-100 w-full shadow-xl'>
-      <div className='card-body text-center'>
-        <h2 className='card-title justify-center'>
-          <AlertCircle className='text-warning mr-2 h-5 w-5' strokeWidth={2} />
-          No Snoozed Tabs
-        </h2>
-        <p>
-          You don&apos;t have any snoozed tabs at the moment. Snooze a tab by
-          clicking the extension icon.
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderTabsTable = (): React.ReactElement => (
-    <div className='card bg-base-100 w-full shadow-xl'>
-      <div className='card-body p-0'>
-        <div className='-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6'>
-          <table className='table-zebra table w-full'>
-            <thead>
-              <tr>
-                <th className='w-1/4'>Tab</th>
-                <th className='w-1/4'>
-                  <div className='flex items-center'>
-                    <AlarmClock className='mr-1 h-4 w-4' strokeWidth={2} />
-                    Snooze Until
-                  </div>
-                </th>
-                <th className='w-1/6'>
-                  <div className='flex items-center'>
-                    <Clock className='mr-1 h-4 w-4' strokeWidth={2} />
-                    Time Left
-                  </div>
-                </th>
-                <th className='w-1/3'>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {snoozedTabItems.map((tab) => (
-                <tr key={tab.id}>
-                  <td>
-                    <div className='flex items-center space-x-2'>
-                      {tab.favicon && (
-                        <img
-                          src={tab.favicon}
-                          alt='Tab favicon'
-                          className='h-5 w-5 shrink-0'
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <div className='flex items-center'>
-                        <button
-                          type='button'
-                          className='link link-primary max-w-[160px] truncate text-left sm:max-w-[220px]'
-                          title={tab.title || tab.url}
-                          onClick={() => openTabInNewTab(tab)}
-                        >
-                          {tab.title || tab.url || 'Unknown tab'}
-                        </button>
-                        {tab.isRecurring && (
-                          <div className='tooltip' data-tip='Recurring snooze'>
-                            <RotateCcw
-                              className='text-accent ml-1.5 h-3.5 w-3.5'
-                              strokeWidth={2.5}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className='whitespace-normal'>
-                    {formatHumanFriendlyDate(tab.wakeTime)}
-                  </td>
-                  <td>{calculateTimeLeft(tab.wakeTime)}</td>
-                  <td>
-                    <div className='flex space-x-2'>
-                      <button
-                        type='button'
-                        className='btn btn-primary btn-sm'
-                        onClick={() => wakeTabNow(tab)}
-                      >
-                        <Sunrise className='mr-1 h-4 w-4' strokeWidth={2} />
-                        Wake Now
-                      </button>
-                      <div
-                        className='tooltip tooltip-error'
-                        data-tip='Delete tab'
-                      >
-                        <button
-                          type='button'
-                          className='btn btn-outline btn-error btn-sm'
-                          onClick={() => removeTab(tab)}
-                          aria-label='Delete tab'
-                        >
-                          <Trash2 className='h-4 w-4' strokeWidth={2} />
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Using if/else instead of nested ternaries
-  let content: React.ReactElement;
-  if (loading) {
-    content = renderLoading();
-  } else if (snoozedTabItems.length === 0) {
-    content = renderEmptyState();
-  } else {
-    content = renderTabsTable();
-  }
+  const handleSettingsChange = (partial: Partial<SnoozrSettings>) => {
+    setSettings(partial);
+  };
 
   return (
     <div className='container mx-auto max-w-3xl p-4'>
-      <div className='mb-6 flex items-center justify-between'>
-        <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
-        <button
-          type='button'
-          className={`btn btn-circle btn-ghost text-${theme === 'silk' ? 'gray' : 'yellow'}-500`}
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'silk' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'silk' ? (
-            <Moon className='mr-2 h-4 w-4' strokeWidth={3} />
-          ) : (
-            <Sun className='mr-2 h-4 w-4' strokeWidth={3} />
-          )}
-        </button>
-      </div>
-      {content}
-
+      <ManageSnoozedTabs
+        snoozedTabItems={snoozedTabItems}
+        loading={loading}
+        wakeTabNow={wakeTabNow}
+        removeTab={removeTab}
+        formatHumanFriendlyDate={formatHumanFriendlyDate}
+        calculateTimeLeft={calculateTimeLeft}
+        openTabInNewTab={openTabInNewTab}
+      />
+      <SnoozrSettingsCard
+        settings={settings}
+        settingsLoading={settingsLoading}
+        handleSettingsChange={handleSettingsChange}
+      />
       <div className='mt-6 text-center text-sm'>
         <div className='flex flex-col items-center justify-center gap-2'>
           <a

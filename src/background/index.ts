@@ -1,5 +1,5 @@
 import { SnoozedTab } from '../types';
-import { calculateNextWakeTime as calculateNextWakeTimeUtil } from '../utils/recurrence';
+import { calculateNextWakeTime } from '../utils/recurrence';
 
 // Initialize extension when installed
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -56,7 +56,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         // Check if this is a recurring tab
         if (snoozedTab.isRecurring && snoozedTab.recurrencePattern) {
           // Calculate the next wake time for this recurring tab
-          const nextWakeTime = calculateNextWakeTimeUtil(
+          const nextWakeTime = await calculateNextWakeTime(
             snoozedTab.recurrencePattern
           );
 
@@ -133,7 +133,7 @@ chrome.runtime.onStartup.addListener(async () => {
 
           // If it's a recurring tab, schedule the next occurrence
           if (tab.isRecurring && tab.recurrencePattern) {
-            const nextWakeTime = calculateNextWakeTimeUtil(
+            const nextWakeTime = await calculateNextWakeTime(
               tab.recurrencePattern
             );
 
