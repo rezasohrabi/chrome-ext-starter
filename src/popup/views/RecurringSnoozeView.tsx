@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 
 import { RecurrencePattern, SnoozedTab } from '../../types';
 import { calculateNextWakeTime } from '../../utils/recurrence';
+import useSettings from '../../utils/useSettings';
 
 // Accessible Form Control component using function declaration with destructured props
 function FormControl({
@@ -40,6 +41,7 @@ function RecurringSnoozeView(): React.ReactElement {
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Default to weekdays
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
   const [endDate, setEndDate] = useState<string>('');
+  const [settings] = useSettings();
 
   const weekDays = [
     { value: 0, label: 'S' },
@@ -64,15 +66,24 @@ function RecurringSnoozeView(): React.ReactElement {
   }, []);
 
   useEffect(() => {
-    // Update selected days when recurrence type changes
+    // Always default time to the current time (HH:MM)
+    const now = new Date();
+    setTime(
+      `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    );
     if (recurrenceType === 'daily') {
       setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
     } else if (recurrenceType === 'weekdays') {
-      setSelectedDays([1, 2, 3, 4, 5]);
-    } else if (recurrenceType === 'weekly') {
-      setSelectedDays([new Date().getDay()]);
+      // Use settings.startOfWeekend to determine weekdays
+      const weekend1 = settings.startOfWeekend;
+      const weekend2 = (settings.startOfWeekend + 1) % 7;
+      setSelectedDays(
+        [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== weekend1 && d !== weekend2)
+      );
+    } else if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
+      setSelectedDays([now.getDay()]);
     }
-  }, [recurrenceType]);
+  }, [settings, recurrenceType]);
 
   const toggleDay = (day: number): void => {
     if (selectedDays.includes(day)) {
@@ -98,7 +109,7 @@ function RecurringSnoozeView(): React.ReactElement {
       recurrencePattern.endDate = new Date(endDate).getTime();
     }
 
-    const firstWakeTimeMs = calculateNextWakeTime(recurrencePattern);
+    const firstWakeTimeMs = await calculateNextWakeTime(recurrencePattern);
     if (!firstWakeTimeMs) return;
 
     const tabInfo: SnoozedTab = {
@@ -130,6 +141,18 @@ function RecurringSnoozeView(): React.ReactElement {
       window.close();
     });
   };
+
+  // Set default time and days based on settings
+  useEffect(() => {
+    setTime(settings.startOfDay);
+    if (recurrenceType === 'weekdays') {
+      setSelectedDays([1, 2, 3, 4, 5]);
+    } else if (recurrenceType === 'weekly') {
+      setSelectedDays([settings.startOfWeek]);
+    } else if (recurrenceType === 'custom') {
+      setSelectedDays([settings.startOfWeek, settings.startOfWeekend]);
+    }
+  }, [settings, recurrenceType]);
 
   if (loading) {
     return (

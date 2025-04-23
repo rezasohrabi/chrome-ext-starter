@@ -1,16 +1,25 @@
 /* eslint-disable import/prefer-default-export */
 import { RecurrencePattern } from '../types';
+import { getSnoozrSettings, SnoozrSettings } from './settings';
 
 /**
  * Calculates the next wake time for a recurring snooze pattern.
  * Returns a timestamp in ms, or null if no more occurrences.
+ * Accepts optional user settings for startOfDay, startOfWeek, startOfWeekend.
  */
-export function calculateNextWakeTime(
+export async function calculateNextWakeTime(
   recurrencePattern: RecurrencePattern,
-  afterDate?: Date
-): number | null {
+  afterDate?: Date,
+  settings?: SnoozrSettings
+): Promise<number | null> {
+  const userSettings = settings || (await getSnoozrSettings());
   const now = afterDate || new Date();
-  const [hours, minutes] = recurrencePattern.time.split(':').map(Number);
+  const [hours, minutes] = (
+    recurrencePattern.time ||
+    `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+  )
+    .split(':')
+    .map(Number);
 
   // Check if we've reached the end date
   if (recurrencePattern.endDate && now.getTime() >= recurrencePattern.endDate) {
@@ -28,24 +37,27 @@ export function calculateNextWakeTime(
       }
       break;
     case 'weekdays': {
+      // Use userSettings to determine which days are considered weekdays
+      // Default: [1,2,3,4,5] (Monday-Friday), but allow user to customize if desired
+      const weekdays = [0, 1, 2, 3, 4, 5, 6].filter(
+        (d) =>
+          d !== userSettings.startOfWeekend &&
+          d !== (userSettings.startOfWeekend + 1) % 7
+      );
       nextWakeTime.setDate(nextWakeTime.getDate() + 1);
-      while (nextWakeTime.getDay() === 0 || nextWakeTime.getDay() === 6) {
+      while (!weekdays.includes(nextWakeTime.getDay())) {
         nextWakeTime.setDate(nextWakeTime.getDate() + 1);
       }
       break;
     }
     case 'weekly':
     case 'custom': {
-      if (
-        !recurrencePattern.daysOfWeek ||
-        recurrencePattern.daysOfWeek.length === 0
-      ) {
-        return null;
-      }
+      const daysOfWeek =
+        recurrencePattern.daysOfWeek && recurrencePattern.daysOfWeek.length > 0
+          ? recurrencePattern.daysOfWeek
+          : [now.getDay()]; // Fallback to current weekday only if not set
       const currentDay = now.getDay();
-      const sortedDays = [...recurrencePattern.daysOfWeek].sort(
-        (a, b) => a - b
-      );
+      const sortedDays = [...daysOfWeek].sort((a, b) => a - b);
       if (
         sortedDays.includes(currentDay) &&
         nextWakeTime.getTime() > now.getTime()

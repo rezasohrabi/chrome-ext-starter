@@ -14,9 +14,10 @@ import {
 
 import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
+import { SnoozrSettings } from '../utils/settings';
+import useSettings from '../utils/useSettings';
 import useTheme from '../utils/useTheme';
 
-// Defining the component as a function declaration per ESLint rule
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ function Options(): React.ReactElement {
         // If recurring, skip to the next occurrence instead of removing
         if (tab.isRecurring && tab.recurrencePattern) {
           // Get the next occurrence after the current one
-          const nextWake = calculateNextWakeTime(
+          const nextWake = await calculateNextWakeTime(
             tab.recurrencePattern,
             new Date(tab.wakeTime + 1) // +1ms to ensure we skip the current
           );
@@ -299,8 +300,165 @@ function Options(): React.ReactElement {
     content = renderTabsTable();
   }
 
+  const [settings, setSettings, settingsLoading] = useSettings();
+
+  const handleSettingsChange = (partial: Partial<SnoozrSettings>) => {
+    setSettings(partial);
+  };
+
   return (
-    <div className='container mx-auto max-w-3xl p-4'>
+    <div className='container mx-auto max-w-2xl p-4'>
+      <div className='card bg-base-200 border-base-300 mb-8 border shadow-2xl'>
+        <div className='card-body'>
+          <h2 className='card-title text-primary mb-2 text-2xl'>
+            Snoozr Settings
+          </h2>
+          <p className='text-base-content/70 mb-4'>
+            Customize your preferred day and time settings for snoozing tabs.
+            These will be used for quick snooze options and recurring schedules.
+          </p>
+          {settingsLoading ? (
+            <span className='loading loading-spinner loading-md' />
+          ) : (
+            <form className='space-y-4' onSubmit={(e) => e.preventDefault()}>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                <div className='form-control'>
+                  <label className='label' htmlFor='startOfDay'>
+                    <span
+                      className='label-text font-semibold'
+                      id='startOfDayLabel'
+                    >
+                      Start of the day
+                    </span>
+                  </label>
+                  <input
+                    id='startOfDay'
+                    aria-labelledby='startOfDayLabel'
+                    type='time'
+                    className='input input-bordered input-primary'
+                    value={settings.startOfDay}
+                    onChange={(e) =>
+                      handleSettingsChange({ startOfDay: e.target.value })
+                    }
+                  />
+                </div>
+                <div className='form-control'>
+                  <label className='label' htmlFor='endOfDay'>
+                    <span
+                      className='label-text font-semibold'
+                      id='endOfDayLabel'
+                    >
+                      End of the day
+                    </span>
+                  </label>
+                  <input
+                    id='endOfDay'
+                    aria-labelledby='endOfDayLabel'
+                    type='time'
+                    className='input input-bordered input-primary'
+                    value={settings.endOfDay}
+                    onChange={(e) =>
+                      handleSettingsChange({ endOfDay: e.target.value })
+                    }
+                  />
+                </div>
+                <div className='form-control'>
+                  <label className='label' htmlFor='startOfWeek'>
+                    <span
+                      className='label-text font-semibold'
+                      id='startOfWeekLabel'
+                    >
+                      Start of the week
+                    </span>
+                  </label>
+                  <select
+                    id='startOfWeek'
+                    aria-labelledby='startOfWeekLabel'
+                    className='select select-bordered select-primary'
+                    value={settings.startOfWeek}
+                    onChange={(e) =>
+                      handleSettingsChange({
+                        startOfWeek: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {[
+                      'Sunday',
+                      'Monday',
+                      'Tuesday',
+                      'Wednesday',
+                      'Thursday',
+                      'Friday',
+                      'Saturday',
+                    ].map((d) => (
+                      <option
+                        key={d}
+                        value={[
+                          'Sunday',
+                          'Monday',
+                          'Tuesday',
+                          'Wednesday',
+                          'Thursday',
+                          'Friday',
+                          'Saturday',
+                        ].indexOf(d)}
+                      >
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className='form-control'>
+                  <label className='label' htmlFor='startOfWeekend'>
+                    <span
+                      className='label-text font-semibold'
+                      id='startOfWeekendLabel'
+                    >
+                      Start of the weekend
+                    </span>
+                  </label>
+                  <select
+                    id='startOfWeekend'
+                    aria-labelledby='startOfWeekendLabel'
+                    className='select select-bordered select-primary'
+                    value={settings.startOfWeekend}
+                    onChange={(e) =>
+                      handleSettingsChange({
+                        startOfWeekend: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {[
+                      'Sunday',
+                      'Monday',
+                      'Tuesday',
+                      'Wednesday',
+                      'Thursday',
+                      'Friday',
+                      'Saturday',
+                    ].map((d) => (
+                      <option
+                        key={d}
+                        value={[
+                          'Sunday',
+                          'Monday',
+                          'Tuesday',
+                          'Wednesday',
+                          'Thursday',
+                          'Friday',
+                          'Saturday',
+                        ].indexOf(d)}
+                      >
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
       <div className='mb-6 flex items-center justify-between'>
         <h1 className='text-2xl font-bold'>Manage Snoozed Tabs</h1>
         <button

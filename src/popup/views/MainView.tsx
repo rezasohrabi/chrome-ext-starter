@@ -1,4 +1,3 @@
-// filepath: /home/burkhard/Code/snoozr/src/popup/views/MainView.tsx
 import React, { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
@@ -13,12 +12,14 @@ import {
 } from 'lucide-react';
 
 import { SnoozeOption } from '../../types';
+import useSettings from '../../utils/useSettings';
 import useTheme from '../../utils/useTheme';
 
 function MainView(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<chrome.tabs.Tab | null>(null);
   const [loading, setLoading] = useState(true);
   const { theme, toggleTheme } = useTheme();
+  const [settings] = useSettings();
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -36,19 +37,19 @@ function MainView(): React.ReactElement {
   const snoozeOptions: SnoozeOption[] = [
     {
       id: 'later_today',
-      label: 'Later Today (in 3h)',
+      label: `Later Today (in 3h)`,
       hours: 3,
       icon: ClockFading,
     },
     {
       id: 'tonight',
-      label: 'Tonight (at 6pm)',
+      label: `Tonight (at ${settings.endOfDay})`,
       custom: true,
       icon: Moon,
       calculateTime: () => {
         const today = new Date();
-        today.setHours(18, 0, 0, 0); // 6pm
-        // If it's already past 6pm, return current time + 1 hour
+        const [h, m] = settings.endOfDay.split(':').map(Number);
+        today.setHours(h, m, 0, 0);
         if (today.getTime() < Date.now()) {
           return Date.now() + 60 * 60 * 1000;
         }
@@ -57,45 +58,49 @@ function MainView(): React.ReactElement {
     },
     {
       id: 'tomorrow',
-      label: 'Tomorrow (9am)',
+      label: `Tomorrow (${settings.startOfDay})`,
       custom: true,
       icon: Sunrise,
       calculateTime: () => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(9, 0, 0, 0); // 9am
+        const [h, m] = settings.startOfDay.split(':').map(Number);
+        tomorrow.setHours(h, m, 0, 0);
         return tomorrow.getTime();
       },
     },
     {
       id: 'weekend',
-      label: 'This Weekend (Saturday, 9am)',
+      label: `This Weekend (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][settings.startOfWeekend]}, ${settings.startOfDay})`,
       custom: true,
       icon: Volleyball,
       calculateTime: () => {
         const today = new Date();
-        const currentDay = today.getDay(); // 0 is Sunday, 6 is Saturday
-        const daysUntilSaturday = currentDay === 6 ? 7 : 6 - currentDay; // If today is Saturday, go to next Saturday
-
+        const currentDay = today.getDay();
+        let daysUntil = settings.startOfWeekend - currentDay;
+        if (daysUntil < 0) daysUntil += 7;
+        if (daysUntil === 0) daysUntil = 7; // always go to next weekend
         const targetDate = new Date();
-        targetDate.setDate(today.getDate() + daysUntilSaturday);
-        targetDate.setHours(9, 0, 0, 0); // 9am
+        targetDate.setDate(today.getDate() + daysUntil);
+        const [h, m] = settings.startOfDay.split(':').map(Number);
+        targetDate.setHours(h, m, 0, 0);
         return targetDate.getTime();
       },
     },
     {
       id: 'next_week',
-      label: 'Next Week (Monday, 9am)',
+      label: `Next Week (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][settings.startOfWeek]}, ${settings.startOfDay})`,
       custom: true,
       icon: BriefcaseBusiness,
       calculateTime: () => {
         const today = new Date();
-        const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday
-        const daysUntilMonday = currentDay === 1 ? 7 : (8 - currentDay) % 7; // If today is Monday, go to next Monday
-
+        const currentDay = today.getDay();
+        let daysUntil = settings.startOfWeek - currentDay;
+        if (daysUntil <= 0) daysUntil += 7;
         const targetDate = new Date();
-        targetDate.setDate(today.getDate() + daysUntilMonday);
-        targetDate.setHours(9, 0, 0, 0); // 9am
+        targetDate.setDate(today.getDate() + daysUntil);
+        const [h, m] = settings.startOfDay.split(':').map(Number);
+        targetDate.setHours(h, m, 0, 0);
         return targetDate.getTime();
       },
     },
