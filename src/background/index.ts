@@ -1,24 +1,31 @@
 import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
 
-// Initialize extension when installed
+// Function to create or update the context menu
+function setupContextMenu() {
+  chrome.contextMenus.create({
+    id: 'snoozr',
+    title: 'Snooze this tab',
+    contexts: ['page'],
+  });
+}
+
+// Initialize extension when installed or updated
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === 'install') {
-    // Set up initial storage
+    // Set up initial storage only on first install
     chrome.storage.local.set({ snoozedTabs: [] });
-
-    // Create context menu
-    chrome.contextMenus.create({
-      id: 'snooze-tab',
-      title: 'Snooze this tab',
-      contexts: ['page'],
-    });
   }
+  setupContextMenu();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  setupContextMenu();
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'snooze-tab' && tab?.id) {
+  if (info.menuItemId === 'snoozr' && tab?.id) {
     // Open the popup programmatically
     chrome.action.openPopup();
   }
