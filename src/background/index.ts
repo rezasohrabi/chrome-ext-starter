@@ -1,5 +1,6 @@
 import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
+import { getSnoozrSettings } from '../utils/settings';
 
 // Function to create or update the context menu
 function setupContextMenu() {
@@ -49,8 +50,14 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       );
 
       if (snoozedTab && snoozedTab.url) {
+        // Fetch settings to determine if tab should be active
+        const settings = await getSnoozrSettings();
+
         // Create a new tab with the snoozed URL
-        await chrome.tabs.create({ url: snoozedTab.url });
+        await chrome.tabs.create({
+          url: snoozedTab.url,
+          active: !settings.openInBg,
+        });
 
         // Show a notification
         chrome.notifications.create({
@@ -135,8 +142,13 @@ chrome.runtime.onStartup.addListener(async () => {
     await Promise.all(
       tabsToWake.map(async (tab: SnoozedTab) => {
         if (tab.url) {
+          // Fetch settings to determine if tab should be active
+          const settings = await getSnoozrSettings();
           // Open the tab
-          await chrome.tabs.create({ url: tab.url });
+          await chrome.tabs.create({
+            url: tab.url,
+            active: !settings.openInBg,
+          });
 
           // If it's a recurring tab, schedule the next occurrence
           if (tab.isRecurring && tab.recurrencePattern) {

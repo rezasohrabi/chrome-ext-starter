@@ -158,6 +158,19 @@ function SnoozrSettingsCard({
                 </select>
               </div>
             </div>
+            <div className='form-control'>
+              <label className='label cursor-pointer'>
+                <span className='label-text'>Open tabs in background</span>
+                <input
+                  type='checkbox'
+                  className='toggle toggle-primary'
+                  checked={settings.openInBg}
+                  onChange={(e) =>
+                    handleSettingsChange({ openInBg: e.target.checked })
+                  }
+                />
+              </label>
+            </div>
           </form>
         )}
       </div>
