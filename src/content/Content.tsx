@@ -5,7 +5,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { JSX } from 'react';
+import { JSX } from 'react';
 
 export default function Content(): JSX.Element {
   return (

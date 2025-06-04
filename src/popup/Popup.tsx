@@ -1,4 +1,4 @@
-import React, { JSX } from 'react';
+import { JSX } from 'react';
 
 export default function Popup(): JSX.Element {
   return (
