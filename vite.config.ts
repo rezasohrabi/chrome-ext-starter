@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import { resolve } from 'path';
 import { crx } from '@crxjs/vite-plugin';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { defineConfig, Plugin } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
