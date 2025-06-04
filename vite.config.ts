@@ -40,4 +40,19 @@ export default defineConfig({
       '@assets': resolve(__dirname, './src/assets'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (
+            assetInfo.name &&
+            /\.(ttf|woff|woff2|eot)$/.test(assetInfo.name)
+          ) {
+            return 'assets/fonts/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
+  },
 });
