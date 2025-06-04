@@ -25,7 +25,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["*/**.ts", "*/**.tsx", "vite.config.ts"],
-  "exclude": ["/node_modules", "/dist"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"],
   "types": ["chrome", "node"]
 }
