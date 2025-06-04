@@ -26,7 +26,7 @@
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.12.2",
     "@types/react": "^19.1.6",
-    "@types/react-dom": "^18.2.22",
+    "@types/react-dom": "^19.1.5",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
