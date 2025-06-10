@@ -26,12 +26,12 @@ async function processQueue() {
 
   isProcessingQueue = false;
   // Immediately try to process the next task if any
-  processQueue(); // Removed void
+  processQueue();
 }
 
 function addTaskToQueue(task: () => Promise<void>) {
   taskQueue.push(task);
-  processQueue(); // Removed void
+  processQueue();
 }
 
 // Function to create or update the context menu
