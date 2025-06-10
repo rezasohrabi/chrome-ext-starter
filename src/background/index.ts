@@ -1,6 +1,52 @@
 import { SnoozedTab } from '../types';
+import { logger, setDebugLoggingPreference } from '../utils/logger';
 import { calculateNextWakeTime } from '../utils/recurrence';
 import { getSnoozrSettings } from '../utils/settings';
+
+// For easier debugging from the service worker console:
+// eslint-disable-next-line no-restricted-globals
+if (typeof self !== 'undefined') {
+  // eslint-disable-next-line no-restricted-globals, @typescript-eslint/no-explicit-any
+  (self as any).setSnoozrDebugLogging = setDebugLoggingPreference;
+}
+
+// Task Queue for serializing storage operations
+const taskQueue: (() => Promise<void>)[] = [];
+let isProcessingQueue = false;
+
+async function processQueue() {
+  if (isProcessingQueue || taskQueue.length === 0) {
+    return;
+  }
+  isProcessingQueue = true;
+
+  try {
+    const task = taskQueue.shift();
+    if (task) {
+      try {
+        await task();
+      } catch (error) {
+        logger.error('Error processing task in queue', { error });
+        if (chrome.runtime.lastError) {
+          // Acknowledge Chrome API errors
+        }
+      }
+    }
+  } finally {
+    isProcessingQueue = false;
+
+    // Check if there are more tasks to process
+    if (taskQueue.length > 0) {
+      // Use setTimeout to prevent deep recursion but maintain asynchronous behavior
+      setTimeout(() => processQueue(), 0);
+    }
+  }
+}
+
+function addTaskToQueue(task: () => Promise<void>) {
+  taskQueue.push(task);
+  processQueue();
+}
 
 // Function to create or update the context menu
 function setupContextMenu() {
@@ -33,122 +79,190 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 // Handle alarms when they go off
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  // Check if this is a snoozed tab alarm
-  if (alarm.name.startsWith('snoozed-tab-')) {
+chrome.alarms.onAlarm.addListener((alarm) => {
+  // No longer async here, the task will be async
+  if (!alarm.name.startsWith('snoozed-tab-')) {
+    return;
+  }
+
+  const alarmTabId = parseInt(alarm.name.replace('snoozed-tab-', ''), 10);
+
+  addTaskToQueue(async () => {
+    // This is the async task, executed serially
+    logger.debug('Processing alarm', { alarmName: alarm.name });
+    let result;
     try {
-      // Get the tab ID from the alarm name
-      const tabId = parseInt(alarm.name.replace('snoozed-tab-', ''), 10);
-
-      // Retrieve the snoozed tabs from storage
-      const { snoozedTabs = [] } =
-        await chrome.storage.local.get('snoozedTabs');
-
-      // Find the snoozed tab that matches this alarm
-      const snoozedTab = snoozedTabs.find(
-        (tab: SnoozedTab) => tab.id === tabId
-      );
-
-      if (snoozedTab && snoozedTab.url) {
-        // Fetch settings to determine if tab should be active
-        const settings = await getSnoozrSettings();
-
-        // Create a new tab with the snoozed URL
-        await chrome.tabs.create({
-          url: snoozedTab.url,
-          active: !settings.openInBg,
-        });
-
-        // Show a notification
-        chrome.notifications.create({
-          type: 'basic',
-          iconUrl: snoozedTab.favicon || 'icons/icon128.png',
-          title: 'Tab Awakened!',
-          message: `Your ${snoozedTab.isRecurring ? 'recurring' : 'snoozed'} tab "${snoozedTab.title}" is now open.`,
-        });
-
-        // Check if this is a recurring tab
-        if (snoozedTab.isRecurring && snoozedTab.recurrencePattern) {
-          // Calculate the next wake time for this recurring tab
-          const nextWakeTime = await calculateNextWakeTime(
-            snoozedTab.recurrencePattern
-          );
-
-          if (nextWakeTime) {
-            // Update the tab's wake time for the next occurrence
-            const updatedTab = {
-              ...snoozedTab,
-              wakeTime: nextWakeTime,
-            };
-
-            // Create a new tab ID since Chrome doesn't allow reusing the same tab ID
-            const newTabId = Date.now(); // Using timestamp as a simple unique ID
-            updatedTab.id = newTabId;
-
-            // Update the snoozed tabs list
-            const updatedTabs = snoozedTabs.filter(
-              (tab: SnoozedTab) => tab.id !== tabId
-            );
-            updatedTabs.push(updatedTab);
-
-            // Save the updated tabs
-            await chrome.storage.local.set({ snoozedTabs: updatedTabs });
-
-            // Create a new alarm for the next occurrence
-            await chrome.alarms.create(`snoozed-tab-${newTabId}`, {
-              when: nextWakeTime,
-            });
-
-            // Remove the console.log statement
-          } else {
-            // End of recurrence, remove the tab from storage
-            const updatedTabs = snoozedTabs.filter(
-              (tab: SnoozedTab) => tab.id !== tabId
-            );
-            await chrome.storage.local.set({ snoozedTabs: updatedTabs });
-          }
-        } else {
-          // Not recurring, remove the tab from storage
-          const updatedTabs = snoozedTabs.filter(
-            (tab: SnoozedTab) => tab.id !== tabId
-          );
-          await chrome.storage.local.set({ snoozedTabs: updatedTabs });
-        }
-      }
-    } catch (error) {
-      // Silently acknowledge error
+      result = await chrome.storage.local.get('snoozedTabs');
+    } catch (storageGetError) {
+      logger.error('Failed to get snoozedTabs from storage', {
+        storageGetError,
+      });
       if (chrome.runtime.lastError) {
-        // Deliberately empty to acknowledge the error
+        /* Acknowledged */
+      }
+      return; // Cannot proceed without tab data
+    }
+
+    const currentSnoozedTabs = (result.snoozedTabs || []) as SnoozedTab[];
+    const tabToWake = currentSnoozedTabs.find((t) => t.id === alarmTabId);
+
+    if (!tabToWake || !tabToWake.url) {
+      // Tab not found or no URL, might have been removed or error.
+      // The alarm fired, so it's consumed. Nothing more to do for this task.
+      logger.warn('Tab to wake not found or has no URL', {
+        alarmTabId,
+        tabExists: !!tabToWake,
+      });
+      if (chrome.runtime.lastError && result === undefined) {
+        // Error during storage.get - already handled above
+      }
+      return;
+    }
+
+    logger.debug('Tab to wake found', {
+      tabId: tabToWake.id,
+      url: tabToWake.url,
+    });
+
+    // Perform actions for the woken tab
+    const settings = await getSnoozrSettings();
+    try {
+      await chrome.tabs.create({
+        url: tabToWake.url,
+        active: !settings.openInBg,
+      });
+      logger.debug('Tab created successfully', { tabId: tabToWake.id });
+    } catch (e) {
+      logger.error('Failed to create tab', {
+        tabId: tabToWake.id,
+        url: tabToWake.url,
+        error: e,
+      });
+      if (chrome.runtime.lastError) {
+        /* tab creation failed - acknowledged */
       }
     }
-  }
+
+    try {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: tabToWake.favicon || 'icons/icon128.png',
+        title: 'Tab Awakened!',
+        message: `Your ${
+          tabToWake.isRecurring ? 'recurring' : 'snoozed'
+        } tab "${tabToWake.title}" is now open.`,
+      });
+      logger.debug('Notification created for woken tab', {
+        tabId: tabToWake.id,
+      });
+    } catch (notifError) {
+      logger.warn('Failed to create notification', {
+        tabId: tabToWake.id,
+        error: notifError,
+      });
+      // Non-critical, so don't necessarily stop processing
+    }
+
+    let newSnoozedTabsList: SnoozedTab[];
+
+    if (tabToWake.isRecurring && tabToWake.recurrencePattern) {
+      const nextWakeTime = await calculateNextWakeTime(
+        tabToWake.recurrencePattern
+      );
+      if (nextWakeTime) {
+        const newRecurringTabId =
+          Date.now() + Math.floor(Math.random() * 10000);
+        newSnoozedTabsList = currentSnoozedTabs.map((t) =>
+          t.id === alarmTabId
+            ? ({
+                ...tabToWake,
+                id: newRecurringTabId,
+                wakeTime: nextWakeTime,
+              } as SnoozedTab)
+            : t
+        );
+        try {
+          await chrome.alarms.create(`snoozed-tab-${newRecurringTabId}`, {
+            when: nextWakeTime,
+          });
+          logger.debug('Recurring alarm created for tab', {
+            newTabId: newRecurringTabId,
+            nextWakeTime,
+          });
+        } catch (e) {
+          logger.error('Failed to create recurring alarm', {
+            newTabId: newRecurringTabId,
+            error: e,
+          });
+          if (chrome.runtime.lastError) {
+            /* alarm creation failed - acknowledged */
+          }
+        }
+      } else {
+        // End of recurrence
+        logger.debug('End of recurrence for tab', { tabId: alarmTabId });
+        newSnoozedTabsList = currentSnoozedTabs.filter(
+          (t) => t.id !== alarmTabId
+        );
+      }
+    } else {
+      // Not recurring
+      newSnoozedTabsList = currentSnoozedTabs.filter(
+        (t) => t.id !== alarmTabId
+      );
+    }
+
+    try {
+      await chrome.storage.local.set({ snoozedTabs: newSnoozedTabsList });
+      logger.debug('Snoozed tabs list updated in storage', {
+        count: newSnoozedTabsList.length,
+      });
+    } catch (e) {
+      logger.error('Failed to set snoozedTabs in storage', { error: e });
+      if (chrome.runtime.lastError) {
+        /* storage.set failed - acknowledged */
+      }
+    }
+  });
 });
 
 // Check for tabs that should have awakened (in case Chrome was closed)
 chrome.runtime.onStartup.addListener(async () => {
+  logger.debug('onStartup: Checking for overdue snoozed tabs');
   try {
-    const { snoozedTabs = [] } = await chrome.storage.local.get('snoozedTabs');
+    const { snoozedTabs: currentSnoozedTabs = [] } =
+      (await chrome.storage.local.get('snoozedTabs')) as {
+        snoozedTabs?: SnoozedTab[];
+      };
+    const settings = await getSnoozrSettings(); // Get settings once
     const now = Date.now();
 
-    // Find tabs that should have been awakened
-    const tabsToWake = snoozedTabs.filter(
-      (tab: SnoozedTab) => tab.wakeTime <= now
-    );
-    const remainingTabs = snoozedTabs.filter(
-      (tab: SnoozedTab) => tab.wakeTime > now
-    );
-
-    // Process tabs that should be awakened - using Promise.all instead of for loop
-    await Promise.all(
-      tabsToWake.map(async (tab: SnoozedTab) => {
-        if (tab.url) {
-          // Fetch settings to determine if tab should be active
-          const settings = await getSnoozrSettings();
-          // Open the tab
-          await chrome.tabs.create({
-            url: tab.url,
-            active: !settings.openInBg,
-          });
+    const processedTabsPromises = currentSnoozedTabs.map(
+      async (tab: SnoozedTab) => {
+        if (tab.wakeTime <= now) {
+          // Tab is due or overdue
+          if (tab.url) {
+            // Open the tab
+            try {
+              await chrome.tabs.create({
+                url: tab.url,
+                active: !settings.openInBg,
+              });
+              logger.debug('onStartup: Opened overdue tab', {
+                tabId: tab.id,
+                url: tab.url,
+              });
+            } catch (e) {
+              logger.error('onStartup: Failed to open overdue tab', {
+                tabId: tab.id,
+                url: tab.url,
+                error: e,
+              });
+              if (chrome.runtime.lastError) {
+                /* acknowledged */
+              }
+            }
+          }
 
           // If it's a recurring tab, schedule the next occurrence
           if (tab.isRecurring && tab.recurrencePattern) {
@@ -157,42 +271,71 @@ chrome.runtime.onStartup.addListener(async () => {
             );
 
             if (nextWakeTime) {
-              // Create a new tab entry with updated wake time
-              const newTabId = Date.now();
-              const updatedTab = {
+              // Create a new tab entry with a new ID and updated wake time
+              const newTabId = Date.now() + Math.floor(Math.random() * 10000); // Ensure unique ID
+              const updatedTab: SnoozedTab = {
                 ...tab,
                 id: newTabId,
                 wakeTime: nextWakeTime,
               };
-
-              // Add the updated tab to the remaining tabs
-              remainingTabs.push(updatedTab);
-
-              // Create a new alarm for the next occurrence
-              await chrome.alarms.create(`snoozed-tab-${newTabId}`, {
-                when: nextWakeTime,
+              logger.debug('onStartup: Rescheduling recurring tab', {
+                oldTabId: tab.id,
+                newTabId,
+                nextWakeTime,
               });
+              return updatedTab; // Return the rescheduled tab
             }
+            logger.debug('onStartup: End of recurrence for overdue tab', {
+              tabId: tab.id,
+            });
+            // If recurrence ended (nextWakeTime is null), the tab is effectively removed.
+            return null;
           }
+          // If non-recurring and due, it's opened and then effectively removed.
+          return null;
         }
-      })
+        // Tab is not yet due, keep it.
+        return tab;
+      }
     );
 
-    // Update storage with remaining tabs (which now includes rescheduled recurring tabs)
-    await chrome.storage.local.set({ snoozedTabs: remainingTabs });
+    const resolvedTabs = await Promise.all(processedTabsPromises);
+    const newSnoozedTabsList = resolvedTabs.filter(
+      (tab) => tab !== null
+    ) as SnoozedTab[];
 
-    // Create alarms for all remaining snoozed tabs
-    await Promise.all(
-      remainingTabs.map((tab: SnoozedTab) =>
-        chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+    // Update storage with the correctly filtered and updated list
+    await chrome.storage.local.set({ snoozedTabs: newSnoozedTabsList });
+    logger.debug('onStartup: Snoozed tabs list updated', {
+      count: newSnoozedTabsList.length,
+    });
+
+    // Create alarms for all tabs that are still snoozed or have been rescheduled
+    const alarmsToCreatePromises = newSnoozedTabsList.map(async (tab) => {
+      try {
+        await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
           when: tab.wakeTime,
-        })
-      )
-    );
+        });
+        logger.debug('onStartup: Alarm created/recreated for tab', {
+          tabId: tab.id,
+          wakeTime: tab.wakeTime,
+        });
+      } catch (e) {
+        logger.error('onStartup: Failed to create alarm for tab', {
+          tabId: tab.id,
+          error: e,
+        });
+        if (chrome.runtime.lastError) {
+          /* acknowledged */
+        }
+      }
+    });
+    await Promise.all(alarmsToCreatePromises);
+    logger.debug('onStartup: Finished processing alarms for remaining tabs');
   } catch (error) {
-    // Silently acknowledge error
+    logger.error('Error during onStartup processing', { error });
     if (chrome.runtime.lastError) {
-      // Deliberately empty to acknowledge the error
+      // Deliberately empty to acknowledge the error, e.g., if an alarm couldn't be created.
     }
   }
 });

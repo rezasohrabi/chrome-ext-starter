@@ -54,6 +54,7 @@ export default defineConfig({
       // This allows Chrome extension pages to connect to the WebSocket
       protocol: 'ws',
       host: 'localhost',
+      port: 5174,
     },
   },
   build: {
