@@ -88,8 +88,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     if (!tabToWake || !tabToWake.url) {
       // Tab not found or no URL, might have been removed or error.
       // The alarm fired, so it's consumed. Nothing more to do for this task.
-      if (chrome.runtime.lastError && result === undefined) {
-        // Error during storage.get
+      if (chrome.runtime.lastError) {
+        // Error during storage.get, lastError will be set if storage.get failed.
       }
       return;
     }
@@ -158,7 +158,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       await chrome.storage.local.set({ snoozedTabs: newSnoozedTabsList });
     } catch (e) {
       if (chrome.runtime.lastError) {
-        /* storage.set failed */
+        console.warn(
+          'Failed to update snoozedTabs in storage:',
+          chrome.runtime.lastError.message || e
+        );
       }
     }
   });
