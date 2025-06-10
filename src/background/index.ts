@@ -12,21 +12,27 @@ async function processQueue() {
   }
   isProcessingQueue = true;
 
-  const task = taskQueue.shift();
-  if (task) {
-    try {
-      await task();
-    } catch (error) {
-      // console.error('Error processing task:', error); // Avoid console.error for linter
-      if (chrome.runtime.lastError) {
-        // Acknowledge Chrome API errors
+  try {
+    const task = taskQueue.shift();
+    if (task) {
+      try {
+        await task();
+      } catch (error) {
+        // console.error('Error processing task:', error); // Avoid console.error for linter
+        if (chrome.runtime.lastError) {
+          // Acknowledge Chrome API errors
+        }
       }
     }
-  }
+  } finally {
+    isProcessingQueue = false;
 
-  isProcessingQueue = false;
-  // Immediately try to process the next task if any
-  processQueue();
+    // Check if there are more tasks to process
+    if (taskQueue.length > 0) {
+      // Use setTimeout to prevent deep recursion but maintain asynchronous behavior
+      setTimeout(() => processQueue(), 0);
+    }
+  }
 }
 
 function addTaskToQueue(task: () => Promise<void>) {
@@ -119,7 +125,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
           Date.now() + Math.floor(Math.random() * 10000);
         newSnoozedTabsList = currentSnoozedTabs.map((t) =>
           t.id === alarmTabId
-            ? { ...tabToWake, id: newRecurringTabId, wakeTime: nextWakeTime }
+            ? ({
+                ...tabToWake,
+                id: newRecurringTabId,
+                wakeTime: nextWakeTime,
+              } as SnoozedTab)
             : t
         );
         try {
