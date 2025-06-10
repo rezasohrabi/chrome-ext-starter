@@ -217,6 +217,9 @@ function Options(): React.ReactElement {
           </div>
         </div>
       </div>
+      <div className='text-base-content/70 mt-4 text-center text-xs'>
+        Snoozr Version: {chrome.runtime.getManifest().version}
+      </div>
     </div>
   );
 }
