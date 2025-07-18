@@ -2,7 +2,7 @@ import postcssRemToPx from '@thedutchcoder/postcss-rem-to-px';
 import autoprefixer from 'autoprefixer';
 import postcssPrefixSelector from 'postcss-prefix-selector';
 
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/postcss';
 
 /**
  * Transforms a CSS selector based on a given prefix.
