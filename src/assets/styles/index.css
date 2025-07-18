@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin "daisyui";
 
 @font-face {
   font-weight: 900;
