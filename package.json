@@ -3,7 +3,7 @@
   "displayName": "Chrome Extension Starter",
   "description": "Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.",
   "private": true,
-  "version": "0.1.2",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,10 +18,11 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.2.1",
-    "@commitlint/config-conventional": "^19.1.0",
-    "@crxjs/vite-plugin": "^1.0.14",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@crxjs/vite-plugin": "^2.0.3",
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
+    "@tailwindcss/postcss": "^4.1.11",
     "@thedutchcoder/postcss-rem-to-px": "^0.0.2",
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.12.2",
@@ -31,7 +32,7 @@
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.5.1",
     "autoprefixer": "^10.4.19",
-    "daisyui": "^4.9.0",
+    "daisyui": "^5.0.46",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.1.0",
@@ -43,15 +44,14 @@
     "eslint-plugin-react-refresh": "^0.4.6",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "postcss": "^8.4.38",
+    "postcss": "^8.5.6",
     "postcss-prefix-selector": "^1.16.0",
     "prettier": "^3.2.5",
     "prettier-plugin-css-order": "^2.1.2",
     "prettier-plugin-tailwindcss": "^0.5.13",
-    "tailwindcss": "^3.4.3",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
-    "vite": "^5.2.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite": "^6.3.5"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
