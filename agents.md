@@ -29,8 +29,8 @@ For data persistence, we use Chrome's storage API (both sync and local storage d
 
 When working on specific types of tasks, refer to these detailed guides:
 
-- **[New Feature Development](prompts/new-feature.prompt.md)** - Use these instructions when implementing new features or functionality
-- **[Troubleshooting Issues](prompts/troubleshooting.prompt.md)** - Use these instructions when diagnosing and fixing bugs or issues
+- **[New Feature Development](.github/prompts/new-feature.prompt.md)** - Use these instructions when implementing new features or functionality
+- **[Troubleshooting Issues](.github/prompts/troubleshooting.prompt.md)** - Use these instructions when diagnosing and fixing bugs or issues
 
 ## Setup and Development
 
