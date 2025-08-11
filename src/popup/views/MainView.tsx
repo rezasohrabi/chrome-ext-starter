@@ -12,7 +12,9 @@ import {
 } from 'lucide-react';
 
 import { SnoozeOption } from '../../types';
+import { buildPresetTitle, calculatePresetWakeTime } from '../../utils/presets';
 import useSettings from '../../utils/useSettings';
+import useSnoozePresets from '../../utils/useSnoozePresets';
 import useTheme from '../../utils/useTheme';
 
 function MainView(): React.ReactElement {
@@ -20,6 +22,7 @@ function MainView(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const { theme, toggleTheme } = useTheme();
   const [settings] = useSettings();
+  const [presets] = useSnoozePresets();
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -34,77 +37,28 @@ function MainView(): React.ReactElement {
     getCurrentTab();
   }, []);
 
-  const snoozeOptions: SnoozeOption[] = [
-    {
-      id: 'later_today',
-      label: `Later (in ${settings.laterHours}h)`,
-      hours: settings.laterHours,
-      icon: ClockFading,
-    },
-    {
-      id: 'tonight',
-      label: `Tonight (at ${settings.endOfDay})`,
+  const snoozeOptions: SnoozeOption[] = presets.map((preset) => {
+    const label = buildPresetTitle(preset, settings);
+    const calculateTime = () => calculatePresetWakeTime(preset, settings);
+    // Map icon name to lucide icon component
+    const iconMap: Record<
+      string,
+      React.ComponentType<{ className?: string; strokeWidth?: number }>
+    > = {
+      clock: ClockFading,
+      moon: Moon,
+      sunrise: Sunrise,
+      volleyball: Volleyball,
+      briefcase: BriefcaseBusiness,
+    };
+    return {
+      id: preset.id,
+      label,
       custom: true,
-      icon: Moon,
-      calculateTime: () => {
-        const today = new Date();
-        const [h, m] = settings.endOfDay.split(':').map(Number);
-        today.setHours(h, m, 0, 0);
-        if (today.getTime() < Date.now()) {
-          return Date.now() + 60 * 60 * 1000;
-        }
-        return today.getTime();
-      },
-    },
-    {
-      id: 'tomorrow',
-      label: `Tomorrow (${settings.startOfDay})`,
-      custom: true,
-      icon: Sunrise,
-      calculateTime: () => {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const [h, m] = settings.startOfDay.split(':').map(Number);
-        tomorrow.setHours(h, m, 0, 0);
-        return tomorrow.getTime();
-      },
-    },
-    {
-      id: 'weekend',
-      label: `This Weekend (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][settings.startOfWeekend]}, ${settings.startOfDay})`,
-      custom: true,
-      icon: Volleyball,
-      calculateTime: () => {
-        const today = new Date();
-        const currentDay = today.getDay();
-        let daysUntil = settings.startOfWeekend - currentDay;
-        if (daysUntil < 0) daysUntil += 7;
-        if (daysUntil === 0) daysUntil = 7; // always go to next weekend
-        const targetDate = new Date();
-        targetDate.setDate(today.getDate() + daysUntil);
-        const [h, m] = settings.startOfDay.split(':').map(Number);
-        targetDate.setHours(h, m, 0, 0);
-        return targetDate.getTime();
-      },
-    },
-    {
-      id: 'next_week',
-      label: `Next Week (${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][settings.startOfWeek]}, ${settings.startOfDay})`,
-      custom: true,
-      icon: BriefcaseBusiness,
-      calculateTime: () => {
-        const today = new Date();
-        const currentDay = today.getDay();
-        let daysUntil = settings.startOfWeek - currentDay;
-        if (daysUntil <= 0) daysUntil += 7;
-        const targetDate = new Date();
-        targetDate.setDate(today.getDate() + daysUntil);
-        const [h, m] = settings.startOfDay.split(':').map(Number);
-        targetDate.setHours(h, m, 0, 0);
-        return targetDate.getTime();
-      },
-    },
-  ];
+      calculateTime,
+      icon: iconMap[preset.icon || 'clock'],
+    };
+  });
 
   const handleSnooze = async (option: SnoozeOption): Promise<void> => {
     if (!activeTab || !activeTab.id) return;

@@ -5,8 +5,10 @@ import { SnoozedTab } from '../types';
 import { calculateNextWakeTime } from '../utils/recurrence';
 import { SnoozrSettings } from '../utils/settings';
 import useSettings from '../utils/useSettings';
+import useSnoozePresets from '../utils/useSnoozePresets';
 import useTheme from '../utils/useTheme';
 import ManageSnoozedTabs from './ManageSnoozedTabs';
+import SnoozePresetsCard from './SnoozePresetsCard';
 import SnoozrSettingsCard from './SnoozrSettingsCard';
 
 function Options(): React.ReactElement {
@@ -163,6 +165,7 @@ function Options(): React.ReactElement {
   };
 
   const [settings, setSettings, settingsLoading] = useSettings();
+  const [presets, setPresets, presetsLoading] = useSnoozePresets();
 
   const handleSettingsChange = (partial: Partial<SnoozrSettings>) => {
     setSettings(partial);
@@ -183,6 +186,12 @@ function Options(): React.ReactElement {
         settings={settings}
         settingsLoading={settingsLoading}
         handleSettingsChange={handleSettingsChange}
+      />
+      <SnoozePresetsCard
+        settings={settings}
+        presets={presets}
+        setPresets={setPresets}
+        loading={presetsLoading}
       />
       <div className='mt-6 text-center text-sm'>
         <div className='flex flex-col items-center justify-center gap-2'>
