@@ -32,6 +32,26 @@ function SnoozrSettingsCard({
                 tabs. These will be used for quick snooze options and recurring
                 schedules.
               </p>
+              <div className='form-control'>
+                <label className='label mb-1 block' htmlFor='laterHours'>
+                  <span className='label-text font-semibold' id='laterHoursLabel'>
+                    Later duration (hours)
+                  </span>
+                </label>
+                <input
+                  id='laterHours'
+                  aria-labelledby='laterHoursLabel'
+                  type='number'
+                  min='1'
+                  className='input input-bordered input-primary w-full'
+                  value={settings.laterHours}
+                  onChange={(e) =>
+                    handleSettingsChange({
+                      laterHours: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
               <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <div className='form-control'>
                   <label className='label mb-1 block' htmlFor='startOfDay'>

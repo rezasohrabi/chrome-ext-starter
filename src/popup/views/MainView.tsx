@@ -37,8 +37,8 @@ function MainView(): React.ReactElement {
   const snoozeOptions: SnoozeOption[] = [
     {
       id: 'later_today',
-      label: `Later Today (in 3h)`,
-      hours: 3,
+      label: `Later (in ${settings.laterHours}h)`,
+      hours: settings.laterHours,
       icon: ClockFading,
     },
     {
