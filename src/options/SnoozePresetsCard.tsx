@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
+  ArrowDown,
+  ArrowUp,
   BriefcaseBusiness,
   ClockFading,
   Moon,
@@ -53,6 +55,17 @@ function SnoozePresetsCard({
 
   const removePreset = (id: string) => {
     setPresets(presets.filter((p) => p.id !== id));
+  };
+
+  const movePreset = (id: string, direction: 'up' | 'down') => {
+    const idx = presets.findIndex((p) => p.id === id);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= presets.length) return;
+    const next = [...presets];
+    const [item] = next.splice(idx, 1);
+    next.splice(targetIdx, 0, item);
+    setPresets(next);
   };
 
   const onReset = async () => {
@@ -113,6 +126,26 @@ function SnoozePresetsCard({
                         </div>
                       </div>
                       <div className='flex flex-shrink-0 items-center gap-2'>
+                        <div className='join hidden sm:flex'>
+                          <button
+                            type='button'
+                            className='btn btn-sm join-item'
+                            onClick={() => movePreset(p.id, 'up')}
+                            aria-label='Move up'
+                            disabled={presets[0]?.id === p.id}
+                          >
+                            <ArrowUp className='h-4 w-4' />
+                          </button>
+                          <button
+                            type='button'
+                            className='btn btn-sm join-item'
+                            onClick={() => movePreset(p.id, 'down')}
+                            aria-label='Move down'
+                            disabled={presets[presets.length - 1]?.id === p.id}
+                          >
+                            <ArrowDown className='h-4 w-4' />
+                          </button>
+                        </div>
                         <button
                           type='button'
                           className='btn btn-sm'
