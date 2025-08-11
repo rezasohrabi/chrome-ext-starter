@@ -3,7 +3,7 @@ import { ManifestV3Export } from '@crxjs/vite-plugin';
 const manifest: ManifestV3Export = {
   manifest_version: 3,
   name: 'Snoozr',
-  version: '1.4.2',
+  version: '1.5.0',
   description:
     'Temporarily put tabs to sleep and have them reappear when you need them',
   permissions: ['storage', 'tabs', 'alarms', 'notifications', 'contextMenus'],
