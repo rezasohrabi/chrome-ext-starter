@@ -12,8 +12,10 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "preinstall": "npx only-allow pnpm",
-    "prepare": "husky install",
-    "bump-and-build": "tsx scripts/bump-and-build.ts"
+    "prepare": "husky || true",
+    "bump-and-build": "tsx scripts/bump-and-build.ts",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.114.25",
@@ -36,6 +38,8 @@
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
     "daisyui": "^5.0.11",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -47,6 +51,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "husky": "^9.0.11",
+    "jsdom": "^26.1.0",
     "lint-staged": "^15.2.2",
     "postcss": "^8.4.38",
     "postcss-prefix-selector": "^1.16.0",
@@ -58,7 +63,8 @@
     "tsx": "^4.19.3",
     "typescript": "^5.4.3",
     "vite": "^5.2.7",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^3.2.4"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [

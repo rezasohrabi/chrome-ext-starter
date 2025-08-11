@@ -40,6 +40,15 @@ export default defineConfig({
       '@assets': resolve(__dirname, './src/assets'),
     },
   },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: [
+      'src/**/*.vitest.{ts,tsx}',
+      'src/**/__tests__/**/*.vitest.{ts,tsx}',
+    ],
+    setupFiles: ['src/test/setup.ts'],
+  },
   server: {
     cors: true, // Set to true to allow all origins during development
     headers: {

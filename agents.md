@@ -79,6 +79,28 @@ When working on specific types of tasks, refer to these detailed guides:
 - **Run tests**: `pnpm test`
 - **Run tests in watch mode**: `pnpm test:watch`
 
+#### Testing approach and rules
+
+- **Runner**: Vitest 3 with globals enabled. Config lives in `vite.config.ts` under the `test` key. Types include `vitest/globals` in `tsconfig.json`.
+- **Test file naming**: Use `.vitest.ts`/`.vitest.tsx`. Valid globs:
+  - `src/**/*.vitest.{ts,tsx}`
+  - `src/**/__tests__/**/*.vitest.{ts,tsx}`
+- **Setup file**: Put shared test setup in `src/test/setup.ts` (referenced by `vite.config.ts`).
+- **Mocking API**: Use `vi.*` instead of `jest.*`:
+  - `vi.mock`, `vi.fn`, `vi.spyOn`, `vi.mocked(someFn)`. Do not use the `jest` namespace.
+  - When mocking a module, return an object of named exports (not a bare default). See Vitest migration guide: [Migrating from Jest](https://vitest.dev/guide/migration.html#migrating-from-jest).
+- **Chrome API mocking**:
+  - Background code uses Promise-based `chrome.storage.local.get/set` and `chrome.alarms.create`. In tests, mock these to return Promises (e.g., `mockResolvedValue`), not callback style.
+  - The settings utility (`src/utils/settings.ts`) uses callback-style `chrome.storage.sync.get/set`. In tests for settings, mock via callback invocation.
+  - Capture event listeners by stubbing `addListener` and storing the callback for invocation in tests (e.g., `chrome.alarms.onAlarm.addListener(cb)`).
+  - The background script serializes work through an internal async task queue; after triggering a listener, await a microtask (e.g., `await new Promise(r => setTimeout(r, 0))`) before asserting.
+- **onStartup nuance**: Background registers multiple `runtime.onStartup` listeners. Tests should target the listener that processes overdue tabs (last registered in `src/background/index.ts`).
+- **DOM/component tests**: Use jsdom. Either set `test.environment = 'jsdom'` in `vite.config.ts` or per-file with `// @vitest-environment jsdom`.
+- **Coverage**: `@vitest/coverage-v8` is available. Run with `pnpm test --coverage`.
+- **Examples**:
+  - Background tests mock `chrome.*` with Promise-returning methods and invoke stored listener callbacks.
+  - Settings tests mock `chrome.storage.sync` with callback-style implementations.
+
 ### Key Files to Know
 
 - `src/manifest.ts` - Extension manifest configuration
