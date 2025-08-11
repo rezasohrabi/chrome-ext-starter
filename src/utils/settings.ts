@@ -7,6 +7,7 @@ export type SnoozrSettings = {
   startOfWeek: number; // 0=Sunday, 1=Monday, ...
   startOfWeekend: number; // 0=Sunday, 6=Saturday, ...
   openInBg: boolean; // true to open tabs in background
+  laterHours: number; // e.g., 3
 };
 
 export const DEFAULT_SETTINGS: SnoozrSettings = {
@@ -15,6 +16,7 @@ export const DEFAULT_SETTINGS: SnoozrSettings = {
   startOfWeek: 1, // Monday
   startOfWeekend: 6, // Saturday
   openInBg: false, // Default to opening tabs in foreground
+  laterHours: 1,
 };
 
 export async function getSnoozrSettings(): Promise<SnoozrSettings> {
