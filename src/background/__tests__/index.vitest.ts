@@ -21,7 +21,6 @@ const mockNotificationsCreate = vi.fn();
 let alarmListenerCallback: AlarmCallback | undefined;
 let startupListenerCallback: StartupCallback | undefined;
 
-// @ts-expect-error - partial mock for tests
 global.chrome = {
   alarms: {
     onAlarm: {
@@ -110,6 +109,7 @@ describe('Background Script', () => {
       title: 'Example Tab',
       wakeTime: Date.now() - 1000,
       favicon: 'icon.png',
+      createdAt: Date.now(),
       isRecurring: false,
     };
 
@@ -173,7 +173,7 @@ describe('Background Script', () => {
       const recurringTab: SnoozedTab = {
         ...mockSnoozedTab,
         isRecurring: true,
-        recurrencePattern: { type: 'daily' },
+        recurrencePattern: { type: 'daily', time: '09:00' },
         id: 456,
       };
       const alarmForRecurring: chrome.alarms.Alarm = {
@@ -216,6 +216,7 @@ describe('Background Script', () => {
       url: 'https://example.com/page1',
       title: 'Page 1',
       wakeTime: now - 2000,
+      createdAt: now - 4000,
       isRecurring: false,
     };
     const tabToWake2: SnoozedTab = {
@@ -223,6 +224,7 @@ describe('Background Script', () => {
       url: 'https://example.com/page2',
       title: 'Page 2',
       wakeTime: now - 1000,
+      createdAt: now - 3000,
       isRecurring: false,
     };
     const tabNotToWake: SnoozedTab = {
@@ -230,6 +232,7 @@ describe('Background Script', () => {
       url: 'https://example.com/page3',
       title: 'Page 3',
       wakeTime: now + 3600000,
+      createdAt: now - 2000,
       isRecurring: false,
     };
 
@@ -299,7 +302,8 @@ describe('Background Script', () => {
         isRecurring: true,
         recurrencePattern: {
           type: 'weekly',
-          days: [new Date(tabToWake1.wakeTime).getDay()],
+          daysOfWeek: [new Date(tabToWake1.wakeTime).getDay()],
+          time: '09:00',
         },
       };
       const settingsOpenBg4: SnoozrSettings = {
