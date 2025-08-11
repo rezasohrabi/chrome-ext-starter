@@ -21,7 +21,7 @@ const viteManifestHackIssue846: Plugin & {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tsconfigPaths(),
@@ -40,15 +40,21 @@ export default defineConfig({
       '@assets': resolve(__dirname, './src/assets'),
     },
   },
-  test: {
-    globals: true,
-    environment: 'node',
-    include: [
-      'src/**/*.vitest.{ts,tsx}',
-      'src/**/__tests__/**/*.vitest.{ts,tsx}',
-    ],
-    setupFiles: ['src/test/setup.ts'],
-  },
+  // Vitest config is not part of Vite's runtime config. When running Vitest,
+  // it will read this block. During normal vite build, this key is ignored.
+  ...(mode === 'test'
+    ? {
+        test: {
+          globals: true,
+          environment: 'node',
+          include: [
+            'src/**/*.vitest.{ts,tsx}',
+            'src/**/__tests__/**/*.vitest.{ts,tsx}',
+          ],
+          setupFiles: ['src/test/setup.ts'],
+        },
+      }
+    : {}),
   server: {
     cors: true, // Set to true to allow all origins during development
     headers: {
@@ -75,4 +81,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
