@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
   DndContext,
@@ -41,6 +41,26 @@ import {
 } from '../utils/presets';
 import { SnoozrSettings } from '../utils/settings';
 
+const ICON_COMPONENTS: Record<
+  string,
+  React.ComponentType<{ className?: string; strokeWidth?: number }>
+> = {
+  alarm: AlarmClock,
+  bell: Bell,
+  bookmark: Bookmark,
+  clock: ClockFading,
+  calendar: Calendar,
+  moon: Moon,
+  sunrise: Sunrise,
+  sun: Sun,
+  star: Star,
+  flag: Flag,
+  hourglass: Hourglass,
+  coffee: Coffee,
+  volleyball: Volleyball,
+  briefcase: BriefcaseBusiness,
+};
+
 function formatPresetSubtitle(p: SnoozePreset): string {
   if (p.kind === 'relative') {
     const hours = p.relative?.hours ?? 0;
@@ -67,8 +87,6 @@ interface SnoozePresetsCardProps {
   setPresets: (next: SnoozePreset[]) => void;
   loading: boolean;
 }
-
-const iconButtonRef = React.createRef<HTMLButtonElement>();
 
 function SortableRow({
   p,
@@ -118,6 +136,7 @@ function SnoozePresetsCard({
 }: SnoozePresetsCardProps): React.ReactElement {
   const [editing, setEditing] = useState<SnoozePreset | null>(null);
   const [iconMenuOpen, setIconMenuOpen] = useState(false);
+  const iconButtonRef = useRef<HTMLButtonElement>(null);
   const handleIconDropdownBlur = (
     e: React.FocusEvent<HTMLDivElement>
   ): void => {
@@ -201,29 +220,7 @@ function SnoozePresetsCard({
               >
                 <div className='space-y-3'>
                   {presets.map((p) => {
-                    const iconMap: Record<
-                      string,
-                      React.ComponentType<{
-                        className?: string;
-                        strokeWidth?: number;
-                      }>
-                    > = {
-                      alarm: AlarmClock,
-                      bell: Bell,
-                      bookmark: Bookmark,
-                      clock: ClockFading,
-                      moon: Moon,
-                      calendar: Calendar,
-                      sunrise: Sunrise,
-                      sun: Sun,
-                      star: Star,
-                      flag: Flag,
-                      hourglass: Hourglass,
-                      coffee: Coffee,
-                      volleyball: Volleyball,
-                      briefcase: BriefcaseBusiness,
-                    };
-                    const Icon = iconMap[p.icon || 'clock'];
+                    const Icon = ICON_COMPONENTS[p.icon || 'clock'];
                     return (
                       <SortableRow key={p.id} p={p}>
                         <div className='flex min-w-0 flex-1 items-center gap-3 text-left'>
@@ -508,7 +505,6 @@ function SnoozePresetsCard({
                             }
                           />
                         </div>
-                        {null}
                       </div>
                     ) : (
                       <div className='form-control'>
