@@ -41,6 +41,26 @@ import {
 } from '../utils/presets';
 import { SnoozrSettings } from '../utils/settings';
 
+function formatPresetSubtitle(p: SnoozePreset): string {
+  if (p.kind === 'relative') {
+    const hours = p.relative?.hours ?? 0;
+    const days = p.relative?.days ?? 0;
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+    if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    if (parts.length === 0) return 'Relative';
+    return `Relative: ${parts.join(' ')}`;
+  }
+  const ruleLabels: Record<string, string> = {
+    tonight: 'Tonight',
+    tomorrow: 'Tomorrow',
+    weekend: 'This Weekend',
+    next_week: 'Next Week',
+  };
+  const label = ruleLabels[p.rule || ''] || (p.rule ? p.rule : '');
+  return label ? `Rule: ${label}` : 'Rule';
+}
+
 interface SnoozePresetsCardProps {
   settings: SnoozrSettings;
   presets: SnoozePreset[];
@@ -218,9 +238,7 @@ function SnoozePresetsCard({
                               {buildPresetTitle(p, settings)}
                             </div>
                             <div className='text-base-content/70 truncate text-left text-xs'>
-                              {p.kind === 'relative'
-                                ? `Relative: ${`${p.relative?.hours ?? 0}h`} ${p.relative?.days ? `+ ${p.relative.days}d` : ''}`
-                                : `Rule: ${p.rule}`}
+                              {formatPresetSubtitle(p)}
                             </div>
                           </div>
                         </div>
