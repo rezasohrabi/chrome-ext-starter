@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
+  AlarmClock,
+  Bell,
+  Bookmark,
   BriefcaseBusiness,
   Calendar,
   ClockFading,
+  Coffee,
+  Flag,
+  Hourglass,
   Moon,
   RotateCcw,
   Settings,
+  Star,
+  Sun,
   Sunrise,
   Volleyball,
 } from 'lucide-react';
@@ -45,9 +53,18 @@ function MainView(): React.ReactElement {
       string,
       React.ComponentType<{ className?: string; strokeWidth?: number }>
     > = {
+      alarm: AlarmClock,
+      bell: Bell,
+      bookmark: Bookmark,
       clock: ClockFading,
       moon: Moon,
+      calendar: Calendar,
       sunrise: Sunrise,
+      sun: Sun,
+      star: Star,
+      flag: Flag,
+      hourglass: Hourglass,
+      coffee: Coffee,
       volleyball: Volleyball,
       briefcase: BriefcaseBusiness,
     };

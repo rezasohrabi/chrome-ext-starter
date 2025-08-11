@@ -1,10 +1,33 @@
 import React, { useMemo, useState } from 'react';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
-  ArrowDown,
-  ArrowUp,
+  DndContext,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  AlarmClock,
+  Bell,
+  Bookmark,
   BriefcaseBusiness,
+  Calendar,
   ClockFading,
+  Coffee,
+  Flag,
+  GripVertical,
+  Hourglass,
   Moon,
+  Star,
+  Sun,
   Sunrise,
   Volleyball,
 } from 'lucide-react';
@@ -25,6 +48,48 @@ interface SnoozePresetsCardProps {
   loading: boolean;
 }
 
+const iconButtonRef = React.createRef<HTMLButtonElement>();
+
+function SortableRow({
+  p,
+  children,
+}: {
+  p: SnoozePreset;
+  children: React.ReactNode;
+}): React.ReactElement {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: p.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : undefined,
+  } as React.CSSProperties;
+  return (
+    <div ref={setNodeRef} style={style} className='card bg-base-100'>
+      <div className='flex flex-row items-center justify-between gap-4 p-3'>
+        <button
+          type='button'
+          className='btn btn-ghost btn-sm mr-1 cursor-grab'
+          aria-label='Drag to reorder'
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          {...attributes}
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          {...listeners}
+        >
+          <GripVertical className='h-4 w-4' strokeWidth={2} />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function SnoozePresetsCard({
   settings,
   presets,
@@ -32,12 +97,30 @@ function SnoozePresetsCard({
   loading,
 }: SnoozePresetsCardProps): React.ReactElement {
   const [editing, setEditing] = useState<SnoozePreset | null>(null);
+  const [iconMenuOpen, setIconMenuOpen] = useState(false);
+  const handleIconDropdownBlur = (
+    e: React.FocusEvent<HTMLDivElement>
+  ): void => {
+    const next = e.relatedTarget as Node | null;
+    if (!next || !e.currentTarget.contains(next)) {
+      setIconMenuOpen(false);
+    }
+  };
 
   const iconOptions: { value: SnoozeIconName; label: string }[] = useMemo(
     () => [
       { value: 'clock', label: 'Clock' },
-      { value: 'moon', label: 'Moon' },
+      { value: 'alarm', label: 'Alarm' },
+      { value: 'bell', label: 'Bell' },
+      { value: 'calendar', label: 'Calendar' },
+      { value: 'hourglass', label: 'Hourglass' },
+      { value: 'coffee', label: 'Coffee' },
+      { value: 'sun', label: 'Sun' },
       { value: 'sunrise', label: 'Sunrise' },
+      { value: 'star', label: 'Star' },
+      { value: 'flag', label: 'Flag' },
+      { value: 'moon', label: 'Moon' },
+      { value: 'bookmark', label: 'Bookmark' },
       { value: 'volleyball', label: 'Volleyball' },
       { value: 'briefcase', label: 'Briefcase' },
     ],
@@ -57,15 +140,18 @@ function SnoozePresetsCard({
     setPresets(presets.filter((p) => p.id !== id));
   };
 
-  const movePreset = (id: string, direction: 'up' | 'down') => {
-    const idx = presets.findIndex((p) => p.id === id);
-    if (idx === -1) return;
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= presets.length) return;
-    const next = [...presets];
-    const [item] = next.splice(idx, 1);
-    next.splice(targetIdx, 0, item);
-    setPresets(next);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 10 } })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = presets.findIndex((p) => p.id === String(active.id));
+    const newIndex = presets.findIndex((p) => p.id === String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    setPresets(arrayMove(presets, oldIndex, newIndex));
   };
 
   const onReset = async () => {
@@ -88,84 +174,78 @@ function SnoozePresetsCard({
               the popup.
             </p>
 
-            <div className='space-y-3'>
-              {presets.map((p) => {
-                const iconMap: Record<
-                  string,
-                  React.ComponentType<{
-                    className?: string;
-                    strokeWidth?: number;
-                  }>
-                > = {
-                  clock: ClockFading,
-                  moon: Moon,
-                  sunrise: Sunrise,
-                  volleyball: Volleyball,
-                  briefcase: BriefcaseBusiness,
-                };
-                const Icon = iconMap[p.icon || 'clock'];
-                return (
-                  <div key={p.id} className='card bg-base-100'>
-                    <div className='flex flex-row items-center justify-between gap-4 p-3'>
-                      <div className='flex min-w-0 items-center gap-3'>
-                        {Icon && (
-                          <Icon
-                            className='text-accent h-5 w-5 flex-shrink-0'
-                            strokeWidth={2}
-                          />
-                        )}
-                        <div className='min-w-0'>
-                          <div className='truncate font-medium'>
-                            {buildPresetTitle(p, settings)}
-                          </div>
-                          <div className='text-base-content/70 truncate text-xs'>
-                            {p.kind === 'relative'
-                              ? `Relative: ${`${p.relative?.hours ?? 0}h`} ${p.relative?.days ? `+ ${p.relative.days}d` : ''}`
-                              : `Rule: ${p.rule}`}
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={presets.map((x) => x.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className='space-y-3'>
+                  {presets.map((p) => {
+                    const iconMap: Record<
+                      string,
+                      React.ComponentType<{
+                        className?: string;
+                        strokeWidth?: number;
+                      }>
+                    > = {
+                      alarm: AlarmClock,
+                      bell: Bell,
+                      bookmark: Bookmark,
+                      clock: ClockFading,
+                      moon: Moon,
+                      calendar: Calendar,
+                      sunrise: Sunrise,
+                      sun: Sun,
+                      star: Star,
+                      flag: Flag,
+                      hourglass: Hourglass,
+                      coffee: Coffee,
+                      volleyball: Volleyball,
+                      briefcase: BriefcaseBusiness,
+                    };
+                    const Icon = iconMap[p.icon || 'clock'];
+                    return (
+                      <SortableRow key={p.id} p={p}>
+                        <div className='flex min-w-0 flex-1 items-center gap-3 text-left'>
+                          {Icon && (
+                            <Icon
+                              className='text-accent h-5 w-5 flex-shrink-0'
+                              strokeWidth={2}
+                            />
+                          )}
+                          <div className='min-w-0 text-left'>
+                            <div className='truncate text-left font-medium'>
+                              {buildPresetTitle(p, settings)}
+                            </div>
+                            <div className='text-base-content/70 truncate text-left text-xs'>
+                              {p.kind === 'relative'
+                                ? `Relative: ${`${p.relative?.hours ?? 0}h`} ${p.relative?.days ? `+ ${p.relative.days}d` : ''}`
+                                : `Rule: ${p.rule}`}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className='flex flex-shrink-0 items-center gap-2'>
-                        <div className='join hidden sm:flex'>
+                        <div className='flex flex-shrink-0 items-center gap-2'>
                           <button
                             type='button'
-                            className='btn btn-sm join-item'
-                            onClick={() => movePreset(p.id, 'up')}
-                            aria-label='Move up'
-                            disabled={presets[0]?.id === p.id}
+                            className='btn btn-sm'
+                            onClick={() => setEditing(p)}
                           >
-                            <ArrowUp className='h-4 w-4' />
+                            Edit
                           </button>
                           <button
                             type='button'
-                            className='btn btn-sm join-item'
-                            onClick={() => movePreset(p.id, 'down')}
-                            aria-label='Move down'
-                            disabled={presets[presets.length - 1]?.id === p.id}
+                            className='btn btn-sm btn-error'
+                            onClick={() => removePreset(p.id)}
                           >
-                            <ArrowDown className='h-4 w-4' />
+                            Remove
                           </button>
                         </div>
-                        <button
-                          type='button'
-                          className='btn btn-sm'
-                          onClick={() => setEditing(p)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type='button'
-                          className='btn btn-sm btn-error'
-                          onClick={() => removePreset(p.id)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </SortableRow>
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
 
             <div className='mt-4 flex gap-2'>
               <button
@@ -194,7 +274,7 @@ function SnoozePresetsCard({
 
             {editing && (
               <dialog open className='modal'>
-                <div className='modal-box'>
+                <div className='modal-box overflow-visible'>
                   <h3 className='text-lg font-bold'>
                     {presets.some((p) => p.id === editing.id)
                       ? 'Edit Preset'
@@ -235,7 +315,7 @@ function SnoozePresetsCard({
                       <span className='text-base-content/70 mt-1 text-xs'>
                         Use placeholders like {`{startOfDay}`}, {`{endOfDay}`},
                         {`{startOfWeekName}`}, {`{startOfWeekendName}`},{' '}
-                        {`{hours}`}
+                        {`{hours}`}, {`{days}`}
                       </span>
                     </div>
                     <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
@@ -263,23 +343,108 @@ function SnoozePresetsCard({
                         <label className='label' htmlFor='preset-icon'>
                           <span className='label-text'>Icon</span>
                         </label>
-                        <select
-                          id='preset-icon'
-                          className='select select-bordered w-full'
-                          value={editing.icon}
-                          onChange={(e) =>
-                            setEditing({
-                              ...editing,
-                              icon: e.target.value as SnoozeIconName,
-                            })
-                          }
+                        <div
+                          className='dropdown dropdown-end relative w-full'
+                          onBlur={handleIconDropdownBlur}
                         >
-                          {iconOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
+                          <button
+                            id='preset-icon'
+                            type='button'
+                            ref={iconButtonRef}
+                            className='select select-bordered border-base-300 flex w-full items-center justify-between pr-8 text-left'
+                            onClick={() => setIconMenuOpen((o) => !o)}
+                          >
+                            <span className='flex items-center gap-2'>
+                              {(() => {
+                                const map: Record<
+                                  string,
+                                  React.ComponentType<{
+                                    className?: string;
+                                    strokeWidth?: number;
+                                  }>
+                                > = {
+                                  alarm: AlarmClock,
+                                  bell: Bell,
+                                  bookmark: Bookmark,
+                                  clock: ClockFading,
+                                  calendar: Calendar,
+                                  moon: Moon,
+                                  sunrise: Sunrise,
+                                  sun: Sun,
+                                  star: Star,
+                                  flag: Flag,
+                                  hourglass: Hourglass,
+                                  coffee: Coffee,
+                                  volleyball: Volleyball,
+                                  briefcase: BriefcaseBusiness,
+                                };
+                                const Ico = map[editing.icon || 'clock'];
+                                return Ico ? (
+                                  <Ico className='h-4 w-4' strokeWidth={2} />
+                                ) : null;
+                              })()}
+                              <span className='capitalize'>
+                                {editing.icon || 'clock'}
+                              </span>
+                            </span>
+                            {/* rely on native select-chevron styling from DaisyUI */}
+                          </button>
+                          {iconMenuOpen && (
+                            <ul className='menu dropdown-content rounded-box bg-base-100 absolute right-0 z-50 mt-2 max-h-64 w-64 overflow-auto border p-2 shadow'>
+                              {iconOptions.map((opt) => {
+                                const map: Record<
+                                  string,
+                                  React.ComponentType<{
+                                    className?: string;
+                                    strokeWidth?: number;
+                                  }>
+                                > = {
+                                  alarm: AlarmClock,
+                                  bell: Bell,
+                                  bookmark: Bookmark,
+                                  clock: ClockFading,
+                                  calendar: Calendar,
+                                  moon: Moon,
+                                  sunrise: Sunrise,
+                                  sun: Sun,
+                                  star: Star,
+                                  flag: Flag,
+                                  hourglass: Hourglass,
+                                  coffee: Coffee,
+                                  volleyball: Volleyball,
+                                  briefcase: BriefcaseBusiness,
+                                };
+                                const Ico = map[opt.value];
+                                return (
+                                  <li key={opt.value}>
+                                    <button
+                                      type='button'
+                                      className='flex items-center gap-2'
+                                      onClick={() => {
+                                        setEditing({
+                                          ...editing,
+                                          icon: opt.value,
+                                        });
+                                        setIconMenuOpen(false);
+                                        iconButtonRef.current?.blur();
+                                      }}
+                                    >
+                                      {Ico && (
+                                        <Ico
+                                          className='h-4 w-4'
+                                          strokeWidth={2}
+                                        />
+                                      )}
+                                      <span className='capitalize'>
+                                        {opt.value}
+                                      </span>
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
                       </div>
                     </div>
 

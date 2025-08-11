@@ -9,7 +9,16 @@ export type SnoozeIconName =
   | 'moon'
   | 'sunrise'
   | 'volleyball'
-  | 'briefcase';
+  | 'briefcase'
+  | 'alarm'
+  | 'bell'
+  | 'calendar'
+  | 'hourglass'
+  | 'coffee'
+  | 'sun'
+  | 'star'
+  | 'flag'
+  | 'bookmark';
 
 export interface SnoozePreset {
   id: string;
@@ -199,20 +208,11 @@ function normalizeSnoozePresets(
   presets: SnoozePreset[],
   legacyLaterHours?: number
 ): SnoozePreset[] {
-  const byId: Record<string, SnoozePreset> = Object.fromEntries(
-    (presets || []).map((p) => [p.id, p])
-  );
-
   const merged: SnoozePreset[] = presets.map((p) =>
     normalizePreset(p, legacyLaterHours)
   );
-
-  // Ensure any missing defaults are present (append at end without overriding user)
-  DEFAULT_SNOOZE_PRESETS.forEach((def) => {
-    if (!byId[def.id]) {
-      merged.push(def);
-    }
-  });
+  // Do not auto-append missing defaults: respect user removals
+  // If storage is empty/undefined we already fall back to DEFAULT_SNOOZE_PRESETS in getSnoozePresets
 
   return merged;
 }
