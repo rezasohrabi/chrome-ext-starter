@@ -34,7 +34,7 @@ function SnoozrSettingsCard({
               </p>
               <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <div className='form-control'>
-                  <label className='label' htmlFor='laterHours'>
+                  <label className='label mb-1 block' htmlFor='laterHours'>
                     <span className='label-text font-semibold' id='laterHoursLabel'>
                       Later duration (hours)
                     </span>
