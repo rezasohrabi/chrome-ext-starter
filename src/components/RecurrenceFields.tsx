@@ -38,6 +38,10 @@ function RecurrenceFields({
   settings,
   ids,
 }: RecurrenceFieldsProps): React.ReactElement {
+  const showDaysOfWeek =
+    recurrenceType === 'weekly' ||
+    recurrenceType === 'weekdays' ||
+    recurrenceType === 'daily';
   return (
     <>
       <fieldset className='fieldset'>
@@ -54,10 +58,38 @@ function RecurrenceFields({
           aria-label='Recurrence Pattern'
         >
           <option value='daily'>Daily</option>
-          <option value='weekdays'>Weekdays</option>
-          <option value='weekly'>Weekly</option>
+          <option value='weekdays'>
+            {(() => {
+              const weekend1 = settings.startOfWeekend;
+              const weekend2 = (settings.startOfWeekend + 1) % 7;
+              const weekdays = [0, 1, 2, 3, 4, 5, 6]
+                .filter((d) => d !== weekend1 && d !== weekend2)
+                .map((d) => {
+                  switch (d) {
+                    case 0:
+                      return 'Sun';
+                    case 1:
+                      return 'Mon';
+                    case 2:
+                      return 'Tue';
+                    case 3:
+                      return 'Wed';
+                    case 4:
+                      return 'Thu';
+                    case 5:
+                      return 'Fri';
+                    case 6:
+                      return 'Sat';
+                    default:
+                      return '';
+                  }
+                })
+                .join(', ');
+              return `Weekdays (${weekdays})`;
+            })()}
+          </option>
+          <option value='weekly'>Weekly (custom)</option>
           <option value='monthly'>Monthly</option>
-          <option value='custom'>Custom</option>
         </select>
       </fieldset>
 
@@ -75,7 +107,7 @@ function RecurrenceFields({
         />
       </fieldset>
 
-      {(recurrenceType === 'weekly' || recurrenceType === 'custom') && (
+      {showDaysOfWeek && (
         <fieldset className='fieldset'>
           <label className='label' htmlFor={ids.daysOfWeekId}>
             Days of Week
@@ -95,7 +127,13 @@ function RecurrenceFields({
                   key={d}
                   type='button'
                   className={`btn btn-circle btn-sm ${selectedDays.includes(d) ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => toggleDay(d)}
+                  onClick={() => {
+                    // Do not clear current selection when switching patterns
+                    if (recurrenceType !== 'weekly') {
+                      setRecurrenceType('weekly');
+                    }
+                    toggleDay(d);
+                  }}
                   aria-label={`Day ${d}`}
                   aria-pressed={selectedDays.includes(d)}
                 >

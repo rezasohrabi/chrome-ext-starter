@@ -164,6 +164,26 @@ function Options(): React.ReactElement {
     );
   };
 
+  // Align selectedDays with recurrenceType, mirroring popup behavior
+  useEffect(() => {
+    const now = new Date();
+    if (recurrenceType === 'weekdays') {
+      const weekend1 = settings.startOfWeekend;
+      const weekend2 = (settings.startOfWeekend + 1) % 7;
+      setSelectedDays((prev) => {
+        const preferred = [0, 1, 2, 3, 4, 5, 6].filter(
+          (d) => d !== weekend1 && d !== weekend2
+        );
+        const overlap = prev.filter((d) => preferred.includes(d));
+        return overlap.length > 0 ? overlap : preferred;
+      });
+    } else if (recurrenceType === 'daily') {
+      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+    } else if (recurrenceType === 'weekly') {
+      setSelectedDays((prev) => (prev.length === 0 ? [now.getDay()] : prev));
+    }
+  }, [settings, recurrenceType]);
+
   const saveEditedRecurrence = async (): Promise<void> => {
     if (!editingTab) return;
     if (editingTab.isRecurring) {

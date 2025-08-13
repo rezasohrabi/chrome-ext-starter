@@ -51,13 +51,20 @@ function RecurringSnoozeView(): React.ReactElement {
     if (recurrenceType === 'weekdays') {
       const weekend1 = settings.startOfWeekend;
       const weekend2 = (settings.startOfWeekend + 1) % 7;
-      setSelectedDays(
-        [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== weekend1 && d !== weekend2)
-      );
+      setSelectedDays((prev) => {
+        const preferred = [0, 1, 2, 3, 4, 5, 6].filter(
+          (d) => d !== weekend1 && d !== weekend2
+        );
+        // Preserve overlap with previous selection where possible; else use preferred
+        const overlap = prev.filter((d) => preferred.includes(d));
+        return overlap.length > 0 ? overlap : preferred;
+      });
     } else if (recurrenceType === 'daily') {
       setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
-    } else if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
-      setSelectedDays([now.getDay()]);
+    } else if (recurrenceType === 'weekly') {
+      if (selectedDays.length === 0) {
+        setSelectedDays([now.getDay()]);
+      }
     }
   }, [settings, recurrenceType]);
 

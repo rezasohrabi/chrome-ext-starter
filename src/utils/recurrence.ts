@@ -50,8 +50,7 @@ export async function calculateNextWakeTime(
       }
       break;
     }
-    case 'weekly':
-    case 'custom': {
+    case 'weekly': {
       const daysOfWeek =
         recurrencePattern.daysOfWeek && recurrencePattern.daysOfWeek.length > 0
           ? recurrencePattern.daysOfWeek
