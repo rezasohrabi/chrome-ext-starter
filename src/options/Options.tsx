@@ -6,6 +6,7 @@ import RecurrenceFields from '../components/RecurrenceFields';
 import { RecurrencePattern, SnoozedTab } from '../types';
 import {
   calculateTimeLeft,
+  computeWeekdayIndices,
   formatDateInputYMD,
   formatHumanFriendlyDate,
   formatTimeInputHM,
@@ -174,11 +175,10 @@ function Options(): React.ReactElement {
   useEffect(() => {
     const now = new Date();
     if (recurrenceType === 'weekdays') {
-      const weekend1 = settings.startOfWeekend;
-      const weekend2 = (settings.startOfWeekend + 1) % 7;
       setSelectedDays((prev) => {
-        const preferred = [0, 1, 2, 3, 4, 5, 6].filter(
-          (d) => d !== weekend1 && d !== weekend2
+        const preferred = computeWeekdayIndices(
+          settings.startOfWeek,
+          settings.startOfWeekend
         );
         const overlap = prev.filter((d) => preferred.includes(d));
         return overlap.length > 0 ? overlap : preferred;

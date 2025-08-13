@@ -59,6 +59,22 @@ export const calculateTimeLeft = (wakeTime: number): string => {
   return `${minutes}m`;
 };
 
+// Returns indices [0..6] representing business days given startOfWeek and startOfWeekend.
+// Weekend is the continuous block starting at startOfWeekend and ending the day before startOfWeek (wrapping).
+// Weekdays are all days not in that block.
+export const computeWeekdayIndices = (
+  startOfWeek: number,
+  startOfWeekend: number
+): number[] => {
+  const allDays = [0, 1, 2, 3, 4, 5, 6];
+  const weekendLength = (startOfWeek - startOfWeekend + 7) % 7; // 0..6
+  const weekendSet = new Set<number>();
+  for (let i = 0; i < weekendLength; i += 1) {
+    weekendSet.add((startOfWeekend + i) % 7);
+  }
+  return allDays.filter((d) => !weekendSet.has(d));
+};
+
 export const formatDateInputYMD = (date: Date): string => {
   const yyyy = date.getFullYear();
   const mm = `${date.getMonth() + 1}`.padStart(2, '0');

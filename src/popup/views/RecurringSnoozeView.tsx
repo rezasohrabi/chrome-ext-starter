@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 
 import RecurrenceFields from '../../components/RecurrenceFields';
 import { RecurrencePattern, SnoozedTab } from '../../types';
+import { computeWeekdayIndices } from '../../utils/datetime';
 import { calculateNextWakeTime } from '../../utils/recurrence';
 import useSettings from '../../utils/useSettings';
 
@@ -49,11 +50,10 @@ function RecurringSnoozeView(): React.ReactElement {
     );
     setDayOfMonth(now.getDate());
     if (recurrenceType === 'weekdays') {
-      const weekend1 = settings.startOfWeekend;
-      const weekend2 = (settings.startOfWeekend + 1) % 7;
       setSelectedDays((prev) => {
-        const preferred = [0, 1, 2, 3, 4, 5, 6].filter(
-          (d) => d !== weekend1 && d !== weekend2
+        const preferred = computeWeekdayIndices(
+          settings.startOfWeek,
+          settings.startOfWeekend
         );
         // Preserve overlap with previous selection where possible; else use preferred
         const overlap = prev.filter((d) => preferred.includes(d));

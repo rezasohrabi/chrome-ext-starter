@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { RecurrencePattern } from '../types';
+import { computeWeekdayIndices } from '../utils/datetime';
 import { SnoozrSettings } from '../utils/settings';
 
 type RecurrenceFieldsProps = {
@@ -60,10 +61,11 @@ function RecurrenceFields({
           <option value='daily'>Daily</option>
           <option value='weekdays'>
             {(() => {
-              const weekend1 = settings.startOfWeekend;
-              const weekend2 = (settings.startOfWeekend + 1) % 7;
-              const weekdays = [0, 1, 2, 3, 4, 5, 6]
-                .filter((d) => d !== weekend1 && d !== weekend2)
+              const idx = computeWeekdayIndices(
+                settings.startOfWeek,
+                settings.startOfWeekend
+              );
+              const weekdays = idx
                 .map((d) => {
                   switch (d) {
                     case 0:
