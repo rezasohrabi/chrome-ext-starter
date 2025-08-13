@@ -27,6 +27,8 @@ function Options(): React.ReactElement {
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
   // One-time edit fields
   const [oneTimeDate, setOneTimeDate] = useState<string>('');
+  // Deprecated separate time field for one-time edit (now using datetime-local)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [oneTimeTime, setOneTimeTime] = useState<string>('09:00');
   // Recurring edit fields
   const [recurrenceType, setRecurrenceType] =
@@ -40,6 +42,7 @@ function Options(): React.ReactElement {
   const daysOfWeekId = useId();
   const dayOfMonthId = useId();
   const endDateId = useId();
+  const dateTimeEditId = useId();
 
   const loadSnoozedTabs = async (): Promise<void> => {
     try {
@@ -128,7 +131,10 @@ function Options(): React.ReactElement {
     const now = new Date();
     // Initialize one-time fields from current wake time
     const currentWake = new Date(tab.wakeTime);
-    setOneTimeDate(formatDateInputYMD(currentWake));
+    // Use combined datetime-local value for one-time editor
+    setOneTimeDate(
+      `${formatDateInputYMD(currentWake)}T${formatTimeInputHM(currentWake)}`
+    );
     setOneTimeTime(formatTimeInputHM(currentWake));
     setTime(
       pattern?.time ||
@@ -227,13 +233,11 @@ function Options(): React.ReactElement {
       }
     } else {
       // One-time snooze: update wake time
-      if (!oneTimeDate || !oneTimeTime) {
+      if (!oneTimeDate) {
         closeEditRecurring();
         return;
       }
-      const nextWakeTime = new Date(
-        `${oneTimeDate}T${oneTimeTime}:00`
-      ).getTime();
+      const nextWakeTime = new Date(oneTimeDate).getTime();
       if (!Number.isFinite(nextWakeTime)) {
         closeEditRecurring();
         return;
@@ -331,12 +335,10 @@ function Options(): React.ReactElement {
               />
             ) : (
               <OneTimeSnoozeFields
-                mode='split'
-                date={oneTimeDate}
-                setDate={(val) => setOneTimeDate(val)}
-                time={oneTimeTime}
-                setTime={(val) => setOneTimeTime(val)}
-                ids={{ dateId: endDateId, timeId }}
+                mode='single'
+                dateTime={oneTimeDate}
+                setDateTime={(val) => setOneTimeDate(val)}
+                ids={{ dateTimeId: dateTimeEditId }}
               />
             )}
 
