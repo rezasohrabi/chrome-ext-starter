@@ -1,0 +1,148 @@
+import React from 'react';
+
+import { RecurrencePattern } from '../types';
+import { SnoozrSettings } from '../utils/settings';
+
+type RecurrenceFieldsProps = {
+  recurrenceType: RecurrencePattern['type'];
+  setRecurrenceType: (type: RecurrencePattern['type']) => void;
+  time: string;
+  setTime: (time: string) => void;
+  selectedDays: number[];
+  toggleDay: (day: number) => void;
+  dayOfMonth: number;
+  setDayOfMonth: (day: number) => void;
+  endDate: string;
+  setEndDate: (date: string) => void;
+  settings: SnoozrSettings;
+  ids: {
+    patternId: string;
+    timeId: string;
+    daysOfWeekId: string;
+    dayOfMonthId: string;
+    endDateId: string;
+  };
+};
+
+function RecurrenceFields({
+  recurrenceType,
+  setRecurrenceType,
+  time,
+  setTime,
+  selectedDays,
+  toggleDay,
+  dayOfMonth,
+  setDayOfMonth,
+  endDate,
+  setEndDate,
+  settings,
+  ids,
+}: RecurrenceFieldsProps): React.ReactElement {
+  return (
+    <>
+      <fieldset className='fieldset'>
+        <label className='label' htmlFor={ids.patternId}>
+          Recurrence Pattern
+        </label>
+        <select
+          id={ids.patternId}
+          className='select'
+          value={recurrenceType}
+          onChange={(e) =>
+            setRecurrenceType(e.target.value as RecurrencePattern['type'])
+          }
+          aria-label='Recurrence Pattern'
+        >
+          <option value='daily'>Daily</option>
+          <option value='weekdays'>Weekdays</option>
+          <option value='weekly'>Weekly</option>
+          <option value='monthly'>Monthly</option>
+          <option value='custom'>Custom</option>
+        </select>
+      </fieldset>
+
+      <fieldset className='fieldset'>
+        <label className='label' htmlFor={ids.timeId}>
+          Time
+        </label>
+        <input
+          id={ids.timeId}
+          type='time'
+          className='input w-full'
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          aria-label='Wake time'
+        />
+      </fieldset>
+
+      {(recurrenceType === 'weekly' || recurrenceType === 'custom') && (
+        <fieldset className='fieldset'>
+          <label className='label' htmlFor={ids.daysOfWeekId}>
+            Days of Week
+          </label>
+          <div
+            className='flex flex-wrap justify-start gap-2'
+            role='group'
+            aria-labelledby={ids.daysOfWeekId}
+          >
+            {Array.from(
+              { length: 7 },
+              (_, i) => (settings.startOfWeek + i) % 7
+            ).map((d) => {
+              const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+              return (
+                <button
+                  key={d}
+                  type='button'
+                  className={`btn btn-circle btn-sm ${selectedDays.includes(d) ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => toggleDay(d)}
+                  aria-label={`Day ${d}`}
+                  aria-pressed={selectedDays.includes(d)}
+                >
+                  {labels[d]}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
+      {recurrenceType === 'monthly' && (
+        <fieldset className='fieldset'>
+          <label className='label' htmlFor={ids.dayOfMonthId}>
+            Day of Month
+          </label>
+          <select
+            id={ids.dayOfMonthId}
+            className='select'
+            value={dayOfMonth}
+            onChange={(e) => setDayOfMonth(Number(e.target.value))}
+            aria-label='Day of month'
+          >
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+              <option key={day} value={day}>
+                {day}
+              </option>
+            ))}
+          </select>
+        </fieldset>
+      )}
+
+      <fieldset className='fieldset'>
+        <label className='label' htmlFor={ids.endDateId}>
+          End Date (Optional)
+        </label>
+        <input
+          id={ids.endDateId}
+          type='date'
+          className='input w-full'
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          aria-label='End date'
+        />
+      </fieldset>
+    </>
+  );
+}
+
+export default RecurrenceFields;

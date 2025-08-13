@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { Link } from '@tanstack/react-router';
+
+import OneTimeSnoozeFields from '../../components/OneTimeSnoozeFields';
+import { nextDayISOForDatetimeLocal } from '../../utils/datetime';
 
 function CustomSnoozeView(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<chrome.tabs.Tab | null>(null);
   const [loading, setLoading] = useState(true);
   const [customDate, setCustomDate] = useState<string>(
-    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+    nextDayISOForDatetimeLocal()
   );
+  const dateTimeId = useId();
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -110,11 +114,11 @@ function CustomSnoozeView(): React.ReactElement {
 
         <div className='mb-4 space-y-4'>
           <p className='text-sm'>Select when to bring this tab back:</p>
-          <input
-            type='datetime-local'
-            className='input w-full'
-            value={customDate}
-            onChange={(e) => setCustomDate(e.target.value)}
+          <OneTimeSnoozeFields
+            mode='single'
+            dateTime={customDate}
+            setDateTime={(val) => setCustomDate(val)}
+            ids={{ dateTimeId }}
           />
         </div>
 

@@ -1,7 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { AlertCircle, Github, Lightbulb } from 'lucide-react';
 
-import { SnoozedTab } from '../types';
+import OneTimeSnoozeFields from '../components/OneTimeSnoozeFields';
+import RecurrenceFields from '../components/RecurrenceFields';
+import { RecurrencePattern, SnoozedTab } from '../types';
+import {
+  calculateTimeLeft,
+  formatDateInputYMD,
+  formatHumanFriendlyDate,
+  formatTimeInputHM,
+} from '../utils/datetime';
 import { calculateNextWakeTime } from '../utils/recurrence';
 import { SnoozrSettings } from '../utils/settings';
 import useSettings from '../utils/useSettings';
@@ -15,6 +23,23 @@ function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
   useTheme();
+  // Edit modal state
+  const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
+  // One-time edit fields
+  const [oneTimeDate, setOneTimeDate] = useState<string>('');
+  const [oneTimeTime, setOneTimeTime] = useState<string>('09:00');
+  // Recurring edit fields
+  const [recurrenceType, setRecurrenceType] =
+    useState<RecurrencePattern['type']>('daily');
+  const [time, setTime] = useState<string>('09:00');
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [dayOfMonth, setDayOfMonth] = useState<number>(1);
+  const [endDate, setEndDate] = useState<string>('');
+  const patternId = useId();
+  const timeId = useId();
+  const daysOfWeekId = useId();
+  const dayOfMonthId = useId();
+  const endDateId = useId();
 
   const loadSnoozedTabs = async (): Promise<void> => {
     try {
@@ -88,69 +113,127 @@ function Options(): React.ReactElement {
     }
   };
 
-  const formatHumanFriendlyDate = (timestamp: number): string => {
-    const wakeDate = new Date(timestamp);
-    const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
+  // Helpers for Edit modal
+  const [settings, setSettings, settingsLoading] = useSettings();
+  const [presets, setPresets, presetsLoading] = useSnoozePresets();
 
-    const isToday =
-      wakeDate.getDate() === now.getDate() &&
-      wakeDate.getMonth() === now.getMonth() &&
-      wakeDate.getFullYear() === now.getFullYear();
-
-    const isTomorrow =
-      wakeDate.getDate() === tomorrow.getDate() &&
-      wakeDate.getMonth() === tomorrow.getMonth() &&
-      wakeDate.getFullYear() === tomorrow.getFullYear();
-
-    // Format time in 12-hour format with AM/PM
-    const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    };
-    const timeStr = wakeDate.toLocaleTimeString(undefined, timeOptions);
-
-    if (isToday) {
-      return `Today at ${timeStr}`;
-    }
-
-    if (isTomorrow) {
-      return `Tomorrow at ${timeStr}`;
-    }
-
-    // For dates within the next 6 days, show the day of week
-    const daysUntil = Math.floor(
-      (wakeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (daysUntil < 7) {
-      const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
-      const dayName = wakeDate.toLocaleDateString(undefined, options);
-      return `${dayName} at ${timeStr}`;
-    }
-
-    // For dates further in the future, show the month and day
-    const dateOptions: Intl.DateTimeFormatOptions = {
-      month: 'short',
-      day: 'numeric',
-      year:
-        wakeDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    };
-    const dateStr = wakeDate.toLocaleDateString(undefined, dateOptions);
-    return `${dateStr} at ${timeStr}`;
+  const formatDateForInput = (timestamp?: number): string => {
+    if (!timestamp) return '';
+    return formatDateInputYMD(new Date(timestamp));
   };
 
-  const calculateTimeLeft = (wakeTime: number): string => {
-    const now = Date.now();
-    const diff = wakeTime - now;
-    if (diff <= 0) return 'Now';
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+  const openEditTab = (tab: SnoozedTab): void => {
+    setEditingTab(tab);
+    const pattern = tab.recurrencePattern;
+    const now = new Date();
+    // Initialize one-time fields from current wake time
+    const currentWake = new Date(tab.wakeTime);
+    setOneTimeDate(formatDateInputYMD(currentWake));
+    setOneTimeTime(formatTimeInputHM(currentWake));
+    setTime(
+      pattern?.time ||
+        `${now.getHours().toString().padStart(2, '0')}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, '0')}`
+    );
+    if (pattern) {
+      setRecurrenceType(pattern.type);
+      setSelectedDays(
+        pattern.daysOfWeek && pattern.daysOfWeek.length > 0
+          ? [...pattern.daysOfWeek]
+          : [now.getDay()]
+      );
+      setDayOfMonth(pattern.dayOfMonth || now.getDate());
+      setEndDate(formatDateForInput(pattern.endDate));
+    } else {
+      setRecurrenceType('daily');
+      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+      setDayOfMonth(now.getDate());
+      setEndDate('');
+    }
+  };
+
+  const closeEditRecurring = (): void => {
+    setEditingTab(null);
+  };
+
+  const toggleDay = (day: number): void => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+    );
+  };
+
+  const saveEditedRecurrence = async (): Promise<void> => {
+    if (!editingTab) return;
+    if (editingTab.isRecurring) {
+      const recurrencePattern: RecurrencePattern = {
+        type: recurrenceType,
+        time,
+        daysOfWeek: selectedDays,
+      };
+      if (recurrenceType === 'monthly') {
+        recurrencePattern.dayOfMonth = dayOfMonth;
+      }
+      if (endDate) {
+        recurrencePattern.endDate = new Date(endDate).getTime();
+      }
+      const nextWakeTime = await calculateNextWakeTime(recurrencePattern);
+      if (!nextWakeTime) {
+        closeEditRecurring();
+        return;
+      }
+      try {
+        const updatedTabs = snoozedTabItems.map((t) =>
+          t.id === editingTab.id
+            ? {
+                ...t,
+                isRecurring: true,
+                recurrencePattern,
+                wakeTime: nextWakeTime,
+              }
+            : t
+        );
+        await chrome.storage.local.set({ snoozedTabs: updatedTabs });
+        await chrome.alarms.clear(`snoozed-tab-${editingTab.id}`);
+        await chrome.alarms.create(`snoozed-tab-${editingTab.id}`, {
+          when: nextWakeTime,
+        });
+        setSnoozedTabs(updatedTabs);
+      } catch (e) {
+        // Silent
+      } finally {
+        closeEditRecurring();
+      }
+    } else {
+      // One-time snooze: update wake time
+      if (!oneTimeDate || !oneTimeTime) {
+        closeEditRecurring();
+        return;
+      }
+      const nextWakeTime = new Date(
+        `${oneTimeDate}T${oneTimeTime}:00`
+      ).getTime();
+      if (!Number.isFinite(nextWakeTime)) {
+        closeEditRecurring();
+        return;
+      }
+      try {
+        const updatedTabs = snoozedTabItems.map((t) =>
+          t.id === editingTab.id ? { ...t, wakeTime: nextWakeTime } : t
+        );
+        await chrome.storage.local.set({ snoozedTabs: updatedTabs });
+        await chrome.alarms.clear(`snoozed-tab-${editingTab.id}`);
+        await chrome.alarms.create(`snoozed-tab-${editingTab.id}`, {
+          when: nextWakeTime,
+        });
+        setSnoozedTabs(updatedTabs);
+      } catch (e) {
+        // Silent
+      } finally {
+        closeEditRecurring();
+      }
+    }
   };
 
   // Opens the snoozed tab in a new tab without waking it up
@@ -164,15 +247,14 @@ function Options(): React.ReactElement {
     }
   };
 
-  const [settings, setSettings, settingsLoading] = useSettings();
-  const [presets, setPresets, presetsLoading] = useSnoozePresets();
+  // Settings/presets already declared above for modal
 
   const handleSettingsChange = (partial: Partial<SnoozrSettings>) => {
     setSettings(partial);
   };
 
   return (
-    <div className='container mx-auto max-w-3xl p-4'>
+    <div className='container mx-auto max-w-6xl p-4'>
       <ManageSnoozedTabs
         snoozedTabItems={snoozedTabItems}
         loading={loading}
@@ -181,7 +263,82 @@ function Options(): React.ReactElement {
         formatHumanFriendlyDate={formatHumanFriendlyDate}
         calculateTimeLeft={calculateTimeLeft}
         openTabInNewTab={openTabInNewTab}
+        onEditTab={openEditTab}
       />
+      {/* Edit Snooze Modal */}
+      <div className={`modal ${editingTab ? 'modal-open' : ''}`}>
+        <div className='modal-box max-w-md'>
+          <h3 className='mb-2 text-lg font-bold'>Edit Snooze</h3>
+          {editingTab && (
+            <div className='bg-base-100 mb-4 flex items-center rounded-lg p-3 shadow-2xs'>
+              {editingTab.favicon && (
+                <img
+                  src={editingTab.favicon}
+                  alt='Tab favicon'
+                  className='mr-3 h-5 w-5'
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <div className='truncate text-sm font-medium'>
+                {editingTab.title || editingTab.url}
+              </div>
+            </div>
+          )}
+
+          <form className='space-y-3' onSubmit={(e) => e.preventDefault()}>
+            {editingTab?.isRecurring ? (
+              <RecurrenceFields
+                recurrenceType={recurrenceType}
+                setRecurrenceType={(val) => setRecurrenceType(val)}
+                time={time}
+                setTime={(val) => setTime(val)}
+                selectedDays={selectedDays}
+                toggleDay={(d) => toggleDay(d)}
+                dayOfMonth={dayOfMonth}
+                setDayOfMonth={(val) => setDayOfMonth(val)}
+                endDate={endDate}
+                setEndDate={(val) => setEndDate(val)}
+                settings={settings}
+                ids={{
+                  patternId,
+                  timeId,
+                  daysOfWeekId,
+                  dayOfMonthId,
+                  endDateId,
+                }}
+              />
+            ) : (
+              <OneTimeSnoozeFields
+                mode='split'
+                date={oneTimeDate}
+                setDate={(val) => setOneTimeDate(val)}
+                time={oneTimeTime}
+                setTime={(val) => setOneTimeTime(val)}
+                ids={{ dateId: endDateId, timeId }}
+              />
+            )}
+
+            <div className='modal-action'>
+              <button
+                type='button'
+                className='btn btn-ghost'
+                onClick={closeEditRecurring}
+              >
+                Cancel
+              </button>
+              <button
+                type='button'
+                className='btn btn-primary'
+                onClick={saveEditedRecurrence}
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
       <SnoozrSettingsCard
         settings={settings}
         settingsLoading={settingsLoading}
