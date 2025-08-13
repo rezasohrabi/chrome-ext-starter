@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 
 import RecurrenceFields from '../../components/RecurrenceFields';
 import { RecurrencePattern, SnoozedTab } from '../../types';
-import { computeWeekdayIndices } from '../../utils/datetime';
+import { computeWeekdayIndices, getAllDayIndices } from '../../utils/datetime';
 import { calculateNextWakeTime } from '../../utils/recurrence';
 import useSettings from '../../utils/useSettings';
 
@@ -50,23 +50,19 @@ function RecurringSnoozeView(): React.ReactElement {
     );
     setDayOfMonth(now.getDate());
     if (recurrenceType === 'weekdays') {
-      setSelectedDays((prev) => {
-        const preferred = computeWeekdayIndices(
-          settings.startOfWeek,
-          settings.startOfWeekend
-        );
-        // Preserve overlap with previous selection where possible; else use preferred
-        const overlap = prev.filter((d) => preferred.includes(d));
-        return overlap.length > 0 ? overlap : preferred;
-      });
+      const weekdays = computeWeekdayIndices(
+        settings.startOfWeek,
+        settings.startOfWeekend
+      );
+      setSelectedDays(weekdays);
     } else if (recurrenceType === 'daily') {
-      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+      setSelectedDays(getAllDayIndices());
     } else if (recurrenceType === 'weekly') {
       if (selectedDays.length === 0) {
         setSelectedDays([now.getDay()]);
       }
     }
-  }, [settings, recurrenceType]);
+  }, [settings, recurrenceType, selectedDays.length]);
 
   const toggleDay = (day: number): void => {
     if (selectedDays.includes(day)) {

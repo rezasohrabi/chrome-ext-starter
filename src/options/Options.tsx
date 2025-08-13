@@ -10,6 +10,7 @@ import {
   formatDateInputYMD,
   formatHumanFriendlyDate,
   formatTimeInputHM,
+  getAllDayIndices,
 } from '../utils/datetime';
 import { calculateNextWakeTime } from '../utils/recurrence';
 import { SnoozrSettings } from '../utils/settings';
@@ -155,7 +156,7 @@ function Options(): React.ReactElement {
       setEndDate(formatDateForInput(pattern.endDate));
     } else {
       setRecurrenceType('daily');
-      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+      setSelectedDays(getAllDayIndices());
       setDayOfMonth(now.getDate());
       setEndDate('');
     }
@@ -175,16 +176,13 @@ function Options(): React.ReactElement {
   useEffect(() => {
     const now = new Date();
     if (recurrenceType === 'weekdays') {
-      setSelectedDays((prev) => {
-        const preferred = computeWeekdayIndices(
-          settings.startOfWeek,
-          settings.startOfWeekend
-        );
-        const overlap = prev.filter((d) => preferred.includes(d));
-        return overlap.length > 0 ? overlap : preferred;
-      });
+      const weekdays = computeWeekdayIndices(
+        settings.startOfWeek,
+        settings.startOfWeekend
+      );
+      setSelectedDays(weekdays);
     } else if (recurrenceType === 'daily') {
-      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+      setSelectedDays(getAllDayIndices());
     } else if (recurrenceType === 'weekly') {
       setSelectedDays((prev) => (prev.length === 0 ? [now.getDay()] : prev));
     }

@@ -75,6 +75,11 @@ export const computeWeekdayIndices = (
   return allDays.filter((d) => !weekendSet.has(d));
 };
 
+export const getAllDayIndices = (): number[] => [0, 1, 2, 3, 4, 5, 6];
+
+export const orderedWeekdayIndices = (startOfWeek: number): number[] =>
+  Array.from({ length: 7 }, (_, i) => (startOfWeek + i) % 7);
+
 export const formatDateInputYMD = (date: Date): string => {
   const yyyy = date.getFullYear();
   const mm = `${date.getMonth() + 1}`.padStart(2, '0');

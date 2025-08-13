@@ -1,7 +1,10 @@
 import React from 'react';
 
 import { RecurrencePattern } from '../types';
-import { computeWeekdayIndices } from '../utils/datetime';
+import {
+  computeWeekdayIndices,
+  orderedWeekdayIndices,
+} from '../utils/datetime';
 import { SnoozrSettings } from '../utils/settings';
 
 type RecurrenceFieldsProps = {
@@ -65,7 +68,10 @@ function RecurrenceFields({
                 settings.startOfWeek,
                 settings.startOfWeekend
               );
-              const weekdays = idx
+              const ordered = orderedWeekdayIndices(
+                settings.startOfWeek
+              ).filter((d) => idx.includes(d));
+              const weekdays = ordered
                 .map((d) => {
                   switch (d) {
                     case 0:
@@ -119,10 +125,7 @@ function RecurrenceFields({
             role='group'
             aria-labelledby={ids.daysOfWeekId}
           >
-            {Array.from(
-              { length: 7 },
-              (_, i) => (settings.startOfWeek + i) % 7
-            ).map((d) => {
+            {orderedWeekdayIndices(settings.startOfWeek).map((d) => {
               const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
               return (
                 <button
