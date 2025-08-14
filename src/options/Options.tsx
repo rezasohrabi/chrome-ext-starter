@@ -28,6 +28,11 @@ function Options(): React.ReactElement {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    tabs: SnoozedTab[];
+    skipped: number;
+  } | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   useTheme();
   // Edit modal state
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
@@ -84,10 +89,12 @@ function Options(): React.ReactElement {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch (_) {
     } catch (error) {
       console.error('Failed to export snoozed tabs:', error);
-      setImportStatus({ type: 'error', message: 'Failed to export snoozed tabs.' });
+      setImportStatus({
+        type: 'error',
+        message: 'Failed to export snoozed tabs.',
+      });
     }
   };
 
@@ -132,46 +139,107 @@ function Options(): React.ReactElement {
         return;
       }
 
-      // Replace existing tabs in storage and recreate alarms
-      await chrome.storage.local.set({ snoozedTabs: validTabs });
-      setSnoozedTabs([...validTabs].sort((a, b) => a.wakeTime - b.wakeTime));
-
-      // Clear existing alarms for current set in memory; best-effort
-      try {
-        const existingAlarms = await chrome.alarms.getAll();
-        const toClear = existingAlarms
-          .filter((a) => a.name.startsWith('snoozed-tab-'))
-          .map((a) => a.name);
-        await Promise.all(toClear.map((name) => chrome.alarms.clear(name)));
-      } catch {
-      } catch (err) {
-        console.error('Failed to clear existing snoozed-tab alarms:', err);
-      }
-
-      // Recreate alarms for imported tabs
-      await Promise.all(
-        validTabs.map(async (tab) => {
-          try {
-            await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
-              when: tab.wakeTime,
-            });
-          } catch {
-            // ignore
-          }
-        })
-      );
-
       const skipped = snoozedTabsArray.length - validTabs.length;
-      setImportStatus({
-        type: 'success',
-        message:
-          skipped > 0
-            ? `Imported ${validTabs.length} tabs. Skipped ${skipped} invalid entries.`
-            : `Imported ${validTabs.length} tabs successfully.`,
-      });
+      setPendingImport({ tabs: validTabs, skipped });
+      setImportModalOpen(true);
     } catch (error) {
       console.error('Failed to import snoozed tabs from file:', error);
       setImportStatus({ type: 'error', message: 'Failed to import file.' });
+    }
+  };
+
+  const ensureUniqueIds = (
+    tabsToAdd: SnoozedTab[],
+    existingIds: Set<number>
+  ): SnoozedTab[] =>
+    tabsToAdd.map((t) => {
+      let newId = t.id;
+      if (existingIds.has(newId)) {
+        do {
+          newId = Date.now() + Math.floor(Math.random() * 10000);
+        } while (existingIds.has(newId));
+      }
+      existingIds.add(newId);
+      return newId === t.id ? t : { ...t, id: newId };
+    });
+
+  const applyImport = async (mode: 'replace' | 'merge'): Promise<void> => {
+    if (!pendingImport) return;
+    const { tabs, skipped } = pendingImport;
+    try {
+      if (mode === 'replace') {
+        // Replace existing tabs
+        await chrome.storage.local.set({ snoozedTabs: tabs });
+        setSnoozedTabs([...tabs].sort((a, b) => a.wakeTime - b.wakeTime));
+
+        // Clear all existing snoozed-tab alarms
+        try {
+          const existingAlarms = await chrome.alarms.getAll();
+          const toClear = existingAlarms
+            .filter((a) => a.name.startsWith('snoozed-tab-'))
+            .map((a) => a.name);
+          await Promise.all(toClear.map((name) => chrome.alarms.clear(name)));
+        } catch {
+          // ignore
+        }
+
+        // Recreate alarms for imported tabs
+        await Promise.all(
+          tabs.map(async (tab) => {
+            try {
+              await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+                when: tab.wakeTime,
+              });
+            } catch {
+              // ignore
+            }
+          })
+        );
+
+        setImportStatus({
+          type: 'success',
+          message:
+            skipped > 0
+              ? `Imported ${tabs.length} tabs. Skipped ${skipped} invalid entries.`
+              : `Imported ${tabs.length} tabs successfully.`,
+        });
+      } else {
+        // Merge with existing
+        const existing = [...snoozedTabItems];
+        const existingIds = new Set(existing.map((t) => t.id));
+        const adjusted = ensureUniqueIds(tabs, existingIds);
+        const merged = [...existing, ...adjusted];
+
+        await chrome.storage.local.set({ snoozedTabs: merged });
+        setSnoozedTabs([...merged].sort((a, b) => a.wakeTime - b.wakeTime));
+
+        // Create alarms only for the imported (adjusted) tabs
+        await Promise.all(
+          adjusted.map(async (tab) => {
+            try {
+              await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+                when: tab.wakeTime,
+              });
+            } catch {
+              // ignore
+            }
+          })
+        );
+
+        setImportStatus({
+          type: 'success',
+          message:
+            skipped > 0
+              ? `Merged ${adjusted.length} tabs. Skipped ${skipped} invalid entries.`
+              : `Merged ${adjusted.length} tabs successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to apply import:', error);
+      setImportStatus({ type: 'error', message: 'Failed to apply import.' });
+    } finally {
+      setImportModalOpen(false);
+      setPendingImport(null);
     }
   };
 
@@ -388,6 +456,61 @@ function Options(): React.ReactElement {
 
   return (
     <div className='container mx-auto max-w-6xl p-4'>
+      {/* Import confirmation modal */}
+      <div className={`modal ${importModalOpen ? 'modal-open' : ''}`}>
+        <div className='modal-box max-w-md'>
+          <h3 className='mb-2 text-lg font-bold'>Import Snoozed Tabs</h3>
+          {pendingImport && (
+            <div className='text-sm'>
+              <p>
+                This will import {pendingImport.tabs.length} tabs
+                {pendingImport.skipped > 0
+                  ? ` (skipped ${pendingImport.skipped} invalid entries)`
+                  : ''}
+                .
+              </p>
+              <p className='mt-2'>Choose how to apply the import:</p>
+              <ul className='mt-1 list-disc pl-5'>
+                <li>
+                  <strong>Replace</strong>: Replace your current snoozed tabs
+                  with the imported list.
+                </li>
+                <li>
+                  <strong>Merge</strong>: Add imported tabs to your existing
+                  list. If an ID conflicts, a new ID will be generated.
+                </li>
+              </ul>
+            </div>
+          )}
+          <div className='modal-action'>
+            <button
+              type='button'
+              className='btn btn-ghost'
+              onClick={() => {
+                setImportModalOpen(false);
+                setPendingImport(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type='button'
+              className='btn'
+              onClick={() => applyImport('merge')}
+            >
+              Merge
+            </button>
+            <button
+              type='button'
+              className='btn btn-primary'
+              onClick={() => applyImport('replace')}
+            >
+              Replace
+            </button>
+          </div>
+        </div>
+      </div>
+
       {importStatus && (
         <div
           className={`alert mb-4 ${
