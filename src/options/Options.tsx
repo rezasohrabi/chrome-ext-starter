@@ -27,11 +27,8 @@ function Options(): React.ReactElement {
   useTheme();
   // Edit modal state
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
-  // One-time edit fields
+  // One-time edit field (combined datetime-local)
   const [oneTimeDate, setOneTimeDate] = useState<string>('');
-  // Deprecated separate time field for one-time edit (now using datetime-local)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [oneTimeTime, setOneTimeTime] = useState<string>('09:00');
   // Recurring edit fields
   const [recurrenceType, setRecurrenceType] =
     useState<RecurrencePattern['type']>('daily');
@@ -137,7 +134,6 @@ function Options(): React.ReactElement {
     setOneTimeDate(
       `${formatDateInputYMD(currentWake)}T${formatTimeInputHM(currentWake)}`
     );
-    setOneTimeTime(formatTimeInputHM(currentWake));
     setTime(
       pattern?.time ||
         `${now.getHours().toString().padStart(2, '0')}:${now
