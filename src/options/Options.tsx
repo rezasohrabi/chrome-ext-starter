@@ -85,7 +85,9 @@ function Options(): React.ReactElement {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (_) {
-      // Silent
+    } catch (error) {
+      console.error('Failed to export snoozed tabs:', error);
+      setImportStatus({ type: 'error', message: 'Failed to export snoozed tabs.' });
     }
   };
 
