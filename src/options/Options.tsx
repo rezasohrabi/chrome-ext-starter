@@ -168,7 +168,8 @@ function Options(): React.ReactElement {
             ? `Imported ${validTabs.length} tabs. Skipped ${skipped} invalid entries.`
             : `Imported ${validTabs.length} tabs successfully.`,
       });
-    } catch (_) {
+    } catch (error) {
+      console.error('Failed to import snoozed tabs from file:', error);
       setImportStatus({ type: 'error', message: 'Failed to import file.' });
     }
   };
