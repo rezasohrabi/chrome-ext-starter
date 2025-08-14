@@ -144,7 +144,8 @@ function Options(): React.ReactElement {
           .map((a) => a.name);
         await Promise.all(toClear.map((name) => chrome.alarms.clear(name)));
       } catch {
-        // ignore
+      } catch (err) {
+        console.error('Failed to clear existing snoozed-tab alarms:', err);
       }
 
       // Recreate alarms for imported tabs
