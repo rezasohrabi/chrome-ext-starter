@@ -1,5 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 import { RecurrencePattern } from '../types';
+import { computeWeekdayIndices } from './datetime';
 import { getSnoozrSettings, SnoozrSettings } from './settings';
 
 /**
@@ -39,10 +40,9 @@ export async function calculateNextWakeTime(
     case 'weekdays': {
       // Use userSettings to determine which days are considered weekdays
       // Default: [1,2,3,4,5] (Monday-Friday), but allow user to customize if desired
-      const weekdays = [0, 1, 2, 3, 4, 5, 6].filter(
-        (d) =>
-          d !== userSettings.startOfWeekend &&
-          d !== (userSettings.startOfWeekend + 1) % 7
+      const weekdays = computeWeekdayIndices(
+        userSettings.startOfWeek,
+        userSettings.startOfWeekend
       );
       nextWakeTime.setDate(nextWakeTime.getDate() + 1);
       while (!weekdays.includes(nextWakeTime.getDay())) {
@@ -50,8 +50,7 @@ export async function calculateNextWakeTime(
       }
       break;
     }
-    case 'weekly':
-    case 'custom': {
+    case 'weekly': {
       const daysOfWeek =
         recurrencePattern.daysOfWeek && recurrencePattern.daysOfWeek.length > 0
           ? recurrencePattern.daysOfWeek

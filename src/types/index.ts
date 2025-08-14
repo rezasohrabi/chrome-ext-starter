@@ -11,7 +11,7 @@ export interface SnoozeOption {
 }
 
 export interface RecurrencePattern {
-  type: 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'custom';
+  type: 'daily' | 'weekdays' | 'weekly' | 'monthly';
   daysOfWeek?: number[]; // 0 = Sunday, 1 = Monday, etc.
   dayOfMonth?: number; // 1-31
   time: string; // HH:MM format

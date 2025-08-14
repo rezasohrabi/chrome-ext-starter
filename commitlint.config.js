@@ -3,5 +3,6 @@ export default {
   rules: {
     // Allow long lines in the commit body
     'body-max-line-length': [0],
+    'header-max-length': [0],
   },
 };

@@ -1,29 +1,13 @@
 import React, { useEffect, useId, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 
+import RecurrenceFields from '../../components/RecurrenceFields';
 import { RecurrencePattern, SnoozedTab } from '../../types';
+import { computeWeekdayIndices, getAllDayIndices } from '../../utils/datetime';
 import { calculateNextWakeTime } from '../../utils/recurrence';
 import useSettings from '../../utils/useSettings';
 
 // Accessible Form Control component using function declaration with destructured props
-function FormControl({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}): React.ReactElement {
-  return (
-    <fieldset className='fieldset'>
-      <label className='label' htmlFor={htmlFor}>
-        {label}
-      </label>
-      {children}
-    </fieldset>
-  );
-}
 
 function RecurringSnoozeView(): React.ReactElement {
   // Generate unique IDs for form elements
@@ -42,16 +26,6 @@ function RecurringSnoozeView(): React.ReactElement {
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
   const [endDate, setEndDate] = useState<string>('');
   const [settings] = useSettings();
-
-  const weekDays = [
-    { value: 0, label: 'S' },
-    { value: 1, label: 'M' },
-    { value: 2, label: 'T' },
-    { value: 3, label: 'W' },
-    { value: 4, label: 'T' },
-    { value: 5, label: 'F' },
-    { value: 6, label: 'S' },
-  ];
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -76,17 +50,19 @@ function RecurringSnoozeView(): React.ReactElement {
     );
     setDayOfMonth(now.getDate());
     if (recurrenceType === 'weekdays') {
-      const weekend1 = settings.startOfWeekend;
-      const weekend2 = (settings.startOfWeekend + 1) % 7;
-      setSelectedDays(
-        [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== weekend1 && d !== weekend2)
+      const weekdays = computeWeekdayIndices(
+        settings.startOfWeek,
+        settings.startOfWeekend
       );
+      setSelectedDays(weekdays);
     } else if (recurrenceType === 'daily') {
-      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
-    } else if (recurrenceType === 'weekly' || recurrenceType === 'custom') {
-      setSelectedDays([now.getDay()]);
+      setSelectedDays(getAllDayIndices());
+    } else if (recurrenceType === 'weekly') {
+      if (selectedDays.length === 0) {
+        setSelectedDays([now.getDay()]);
+      }
     }
-  }, [settings, recurrenceType]);
+  }, [settings, recurrenceType, selectedDays.length]);
 
   const toggleDay = (day: number): void => {
     if (selectedDays.includes(day)) {
@@ -200,130 +176,26 @@ function RecurringSnoozeView(): React.ReactElement {
         )}
 
         <form className='space-y-4' onSubmit={(e) => e.preventDefault()}>
-          <FormControl label='Recurrence Pattern' htmlFor={patternId}>
-            <select
-              id={patternId}
-              className='select'
-              value={recurrenceType}
-              onChange={(e) =>
-                setRecurrenceType(e.target.value as RecurrencePattern['type'])
-              }
-              aria-label='Recurrence Pattern'
-            >
-              <option value='daily'>Daily</option>
-              <option value='weekdays'>
-                Weekdays (
-                {[0, 1, 2, 3, 4, 5, 6]
-                  .filter(
-                    (d) =>
-                      d !== settings.startOfWeekend &&
-                      d !== (settings.startOfWeekend + 1) % 7
-                  )
-                  .map((d) => {
-                    switch (d) {
-                      case 0:
-                        return 'Sun';
-                      case 1:
-                        return 'Mon';
-                      case 2:
-                        return 'Tue';
-                      case 3:
-                        return 'Wed';
-                      case 4:
-                        return 'Thu';
-                      case 5:
-                        return 'Fri';
-                      case 6:
-                        return 'Sat';
-                      default:
-                        return '';
-                    }
-                  })
-                  .join(', ')}
-                )
-              </option>
-              <option value='weekly'>Weekly</option>
-              <option value='monthly'>Monthly</option>
-              <option value='custom'>Custom</option>
-            </select>
-          </FormControl>
-
-          <FormControl label='Time' htmlFor={timeId}>
-            <input
-              id={timeId}
-              type='time'
-              className='input w-full'
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              aria-label='Wake time'
-            />
-          </FormControl>
-
-          {(recurrenceType === 'weekly' || recurrenceType === 'custom') && (
-            <FormControl label='Days of Week' htmlFor={daysOfWeekId}>
-              <div
-                className='flex justify-between'
-                role='group'
-                aria-labelledby={daysOfWeekId}
-              >
-                {(() => {
-                  // Order days so that user's startOfWeek is first
-                  const orderedDays = Array.from(
-                    { length: 7 },
-                    (_, i) => (settings.startOfWeek + i) % 7
-                  );
-                  return orderedDays.map((d) => {
-                    const day = weekDays[d];
-                    return (
-                      <button
-                        key={day.value}
-                        type='button'
-                        className={`btn btn-circle btn-sm ${
-                          selectedDays.includes(day.value)
-                            ? 'btn-primary'
-                            : 'btn-outline'
-                        }`}
-                        onClick={() => toggleDay(day.value)}
-                        aria-label={`${day.label} day`}
-                        aria-pressed={selectedDays.includes(day.value)}
-                      >
-                        {day.label}
-                      </button>
-                    );
-                  });
-                })()}
-              </div>
-            </FormControl>
-          )}
-
-          {recurrenceType === 'monthly' && (
-            <FormControl label='Day of Month' htmlFor={dayOfMonthId}>
-              <select
-                id={dayOfMonthId}
-                className='select'
-                value={dayOfMonth}
-                onChange={(e) => setDayOfMonth(Number(e.target.value))}
-                aria-label='Day of month'
-              >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <option key={day} value={day}>
-                    {day}
-                  </option>
-                ))}
-              </select>
-            </FormControl>
-          )}
-
-          <FormControl label='End Date (Optional)' htmlFor={endDateId}>
-            <input
-              id={endDateId}
-              type='date'
-              className='input w-full'
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              aria-label='End date'
-            />
-          </FormControl>
+          <RecurrenceFields
+            recurrenceType={recurrenceType}
+            setRecurrenceType={(val) => setRecurrenceType(val)}
+            time={time}
+            setTime={(val) => setTime(val)}
+            selectedDays={selectedDays}
+            toggleDay={(d) => toggleDay(d)}
+            dayOfMonth={dayOfMonth}
+            setDayOfMonth={(val) => setDayOfMonth(val)}
+            endDate={endDate}
+            setEndDate={(val) => setEndDate(val)}
+            settings={settings}
+            ids={{
+              patternId,
+              timeId,
+              daysOfWeekId,
+              dayOfMonthId,
+              endDateId,
+            }}
+          />
 
           <div className='card-actions mt-4'>
             <button

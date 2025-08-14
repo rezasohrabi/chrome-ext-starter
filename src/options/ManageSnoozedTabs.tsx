@@ -3,6 +3,7 @@ import {
   AlarmClock,
   AlertCircle,
   Clock,
+  Pencil,
   RotateCcw,
   Sunrise,
   Trash2,
@@ -18,6 +19,7 @@ interface ManageSnoozedTabsProps {
   formatHumanFriendlyDate: (timestamp: number) => string;
   calculateTimeLeft: (wakeTime: number) => string;
   openTabInNewTab: (tab: SnoozedTab) => void;
+  onEditTab?: (tab: SnoozedTab) => void;
 }
 
 function ManageSnoozedTabs({
@@ -28,6 +30,7 @@ function ManageSnoozedTabs({
   formatHumanFriendlyDate,
   calculateTimeLeft,
   openTabInNewTab,
+  onEditTab = undefined,
 }: ManageSnoozedTabsProps) {
   const renderLoading = () => (
     <div className='p-8 text-center'>
@@ -52,7 +55,7 @@ function ManageSnoozedTabs({
 
   const renderTabsTable = () => (
     <div className='overflow-x-auto px-0 sm:px-0 md:overflow-x-visible'>
-      <table className='table-zebra table w-full min-w-[700px] md:min-w-0'>
+      <table className='table-zebra table w-full min-w-[820px] md:min-w-0'>
         <thead>
           <tr>
             <th className='w-1/4'>Tab</th>
@@ -89,7 +92,7 @@ function ManageSnoozedTabs({
                   <div className='flex items-center'>
                     <button
                       type='button'
-                      className='link link-primary max-w-[160px] truncate text-left sm:max-w-[220px]'
+                      className='link link-primary max-w-[260px] truncate text-left sm:max-w-[360px]'
                       title={tab.title || tab.url}
                       onClick={() => openTabInNewTab(tab)}
                     >
@@ -111,7 +114,7 @@ function ManageSnoozedTabs({
               </td>
               <td>{calculateTimeLeft(tab.wakeTime)}</td>
               <td className='text-right'>
-                <div className='flex justify-end space-x-2'>
+                <div className='flex flex-wrap justify-end gap-2'>
                   <button
                     type='button'
                     className='btn btn-primary btn-sm'
@@ -120,6 +123,18 @@ function ManageSnoozedTabs({
                     <Sunrise className='mr-1 h-4 w-4' strokeWidth={2} />
                     Wake Now
                   </button>
+                  {onEditTab && (
+                    <div className='tooltip' data-tip='Edit'>
+                      <button
+                        type='button'
+                        className='btn btn-outline btn-sm'
+                        onClick={() => onEditTab(tab)}
+                        aria-label='Edit'
+                      >
+                        <Pencil className='h-4 w-4' strokeWidth={2} />
+                      </button>
+                    </div>
+                  )}
                   <div className='tooltip tooltip-error' data-tip='Delete tab'>
                     <button
                       type='button'
@@ -159,5 +174,9 @@ function ManageSnoozedTabs({
     </div>
   );
 }
+
+ManageSnoozedTabs.defaultProps = {
+  onEditTab: undefined,
+};
 
 export default ManageSnoozedTabs;
