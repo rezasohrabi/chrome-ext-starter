@@ -28,3 +28,9 @@ export interface SnoozedTab {
   isRecurring?: boolean;
   recurrencePattern?: RecurrencePattern;
 }
+
+export interface SnoozedTabsExport {
+  exportedWithVersion: string;
+  exportedAt: number;
+  snoozedTabs: SnoozedTab[];
+}

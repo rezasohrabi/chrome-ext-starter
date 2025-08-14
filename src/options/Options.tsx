@@ -1,9 +1,9 @@
 import React, { useEffect, useId, useState } from 'react';
-import { AlertCircle, Github, Lightbulb } from 'lucide-react';
+import { AlertCircle, CheckCircle, Github, Lightbulb } from 'lucide-react';
 
 import OneTimeSnoozeFields from '../components/OneTimeSnoozeFields';
 import RecurrenceFields from '../components/RecurrenceFields';
-import { RecurrencePattern, SnoozedTab } from '../types';
+import { RecurrencePattern, SnoozedTab, SnoozedTabsExport } from '../types';
 import {
   calculateTimeLeft,
   computeWeekdayIndices,
@@ -24,6 +24,15 @@ import SnoozrSettingsCard from './SnoozrSettingsCard';
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importStatus, setImportStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    tabs: SnoozedTab[];
+    skipped: number;
+  } | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   useTheme();
   // Edit modal state
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
@@ -57,6 +66,180 @@ function Options(): React.ReactElement {
       // Silently handle error without console.error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportSnoozedTabs = async (): Promise<void> => {
+    try {
+      const { snoozedTabs = [] } =
+        await chrome.storage.local.get('snoozedTabs');
+      const payload: SnoozedTabsExport = {
+        exportedWithVersion: chrome.runtime.getManifest().version,
+        exportedAt: Date.now(),
+        snoozedTabs: snoozedTabs as SnoozedTab[],
+      };
+      const dataStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `snoozr-snoozed-tabs-${ts}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export snoozed tabs:', error);
+      setImportStatus({
+        type: 'error',
+        message: 'Failed to export snoozed tabs.',
+      });
+    }
+  };
+
+  const importSnoozedTabsFromFile = async (file: File): Promise<void> => {
+    try {
+      const text = await file.text();
+      let snoozedTabsArray: SnoozedTab[] | null = null;
+
+      try {
+        const parsed = JSON.parse(text) as SnoozedTabsExport | SnoozedTab[];
+        if (Array.isArray(parsed)) {
+          snoozedTabsArray = parsed;
+        } else if (
+          parsed &&
+          typeof parsed === 'object' &&
+          Array.isArray((parsed as SnoozedTabsExport).snoozedTabs)
+        ) {
+          snoozedTabsArray = (parsed as SnoozedTabsExport).snoozedTabs;
+        }
+      } catch {
+        setImportStatus({ type: 'error', message: 'Invalid JSON file.' });
+        return;
+      }
+
+      if (!Array.isArray(snoozedTabsArray)) {
+        setImportStatus({
+          type: 'error',
+          message: 'File format not recognized. Expected a Snoozr export JSON.',
+        });
+        return;
+      }
+
+      // Basic validation: keep only items with numeric id and wakeTime
+      const validTabs = snoozedTabsArray.filter(
+        (t) => typeof t?.id === 'number' && typeof t?.wakeTime === 'number'
+      );
+      if (validTabs.length === 0) {
+        setImportStatus({
+          type: 'error',
+          message: 'No valid snoozed tabs found in the file.',
+        });
+        return;
+      }
+
+      const skipped = snoozedTabsArray.length - validTabs.length;
+      setPendingImport({ tabs: validTabs, skipped });
+      setImportModalOpen(true);
+    } catch (error) {
+      console.error('Failed to import snoozed tabs from file:', error);
+      setImportStatus({ type: 'error', message: 'Failed to import file.' });
+    }
+  };
+
+  const ensureUniqueIds = (
+    tabsToAdd: SnoozedTab[],
+    existingIds: Set<number>
+  ): SnoozedTab[] =>
+    tabsToAdd.map((t) => {
+      let newId = t.id;
+      if (existingIds.has(newId)) {
+        do {
+          newId = Date.now() + Math.floor(Math.random() * 10000);
+        } while (existingIds.has(newId));
+      }
+      existingIds.add(newId);
+      return newId === t.id ? t : { ...t, id: newId };
+    });
+
+  const applyImport = async (mode: 'replace' | 'merge'): Promise<void> => {
+    if (!pendingImport) return;
+    const { tabs, skipped } = pendingImport;
+    try {
+      if (mode === 'replace') {
+        // Replace existing tabs
+        await chrome.storage.local.set({ snoozedTabs: tabs });
+        setSnoozedTabs([...tabs].sort((a, b) => a.wakeTime - b.wakeTime));
+
+        // Clear all existing snoozed-tab alarms
+        try {
+          const existingAlarms = await chrome.alarms.getAll();
+          const toClear = existingAlarms
+            .filter((a) => a.name.startsWith('snoozed-tab-'))
+            .map((a) => a.name);
+          await Promise.all(toClear.map((name) => chrome.alarms.clear(name)));
+        } catch {
+          // ignore
+        }
+
+        // Recreate alarms for imported tabs
+        await Promise.all(
+          tabs.map(async (tab) => {
+            try {
+              await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+                when: tab.wakeTime,
+              });
+            } catch {
+              // ignore
+            }
+          })
+        );
+
+        setImportStatus({
+          type: 'success',
+          message:
+            skipped > 0
+              ? `Imported ${tabs.length} tabs. Skipped ${skipped} invalid entries.`
+              : `Imported ${tabs.length} tabs successfully.`,
+        });
+      } else {
+        // Merge with existing
+        const existing = [...snoozedTabItems];
+        const existingIds = new Set(existing.map((t) => t.id));
+        const adjusted = ensureUniqueIds(tabs, existingIds);
+        const merged = [...existing, ...adjusted];
+
+        await chrome.storage.local.set({ snoozedTabs: merged });
+        setSnoozedTabs([...merged].sort((a, b) => a.wakeTime - b.wakeTime));
+
+        // Create alarms only for the imported (adjusted) tabs
+        await Promise.all(
+          adjusted.map(async (tab) => {
+            try {
+              await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+                when: tab.wakeTime,
+              });
+            } catch {
+              // ignore
+            }
+          })
+        );
+
+        setImportStatus({
+          type: 'success',
+          message:
+            skipped > 0
+              ? `Merged ${adjusted.length} tabs. Skipped ${skipped} invalid entries.`
+              : `Merged ${adjusted.length} tabs successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to apply import:', error);
+      setImportStatus({ type: 'error', message: 'Failed to apply import.' });
+    } finally {
+      setImportModalOpen(false);
+      setPendingImport(null);
     }
   };
 
@@ -273,6 +456,86 @@ function Options(): React.ReactElement {
 
   return (
     <div className='container mx-auto max-w-6xl p-4'>
+      {/* Import confirmation modal */}
+      <div className={`modal ${importModalOpen ? 'modal-open' : ''}`}>
+        <div className='modal-box max-w-md'>
+          <h3 className='mb-2 text-lg font-bold'>Import Snoozed Tabs</h3>
+          {pendingImport && (
+            <div className='text-sm'>
+              <p>
+                This will import {pendingImport.tabs.length} tabs
+                {pendingImport.skipped > 0
+                  ? ` (skipped ${pendingImport.skipped} invalid entries)`
+                  : ''}
+                .
+              </p>
+              <p className='mt-2'>Choose how to apply the import:</p>
+              <ul className='mt-1 list-disc pl-5'>
+                <li>
+                  <strong>Replace</strong>: Replace your current snoozed tabs
+                  with the imported list.
+                </li>
+                <li>
+                  <strong>Merge</strong>: Add imported tabs to your existing
+                  list. If an ID conflicts, a new ID will be generated.
+                </li>
+              </ul>
+            </div>
+          )}
+          <div className='modal-action'>
+            <button
+              type='button'
+              className='btn btn-ghost'
+              onClick={() => {
+                setImportModalOpen(false);
+                setPendingImport(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type='button'
+              className='btn'
+              onClick={() => applyImport('merge')}
+            >
+              Merge
+            </button>
+            <button
+              type='button'
+              className='btn btn-primary'
+              onClick={() => applyImport('replace')}
+            >
+              Replace
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {importStatus && (
+        <div
+          className={`alert mb-4 ${
+            importStatus.type === 'error' ? 'alert-error' : 'alert-success'
+          }`}
+        >
+          <div className='flex items-center'>
+            {importStatus.type === 'error' ? (
+              <AlertCircle className='h-5 w-5' strokeWidth={2} />
+            ) : (
+              <CheckCircle className='h-5 w-5' strokeWidth={2} />
+            )}
+            <span className='ml-2'>{importStatus.message}</span>
+          </div>
+          <div className='ml-auto'>
+            <button
+              type='button'
+              className='btn btn-ghost btn-sm'
+              onClick={() => setImportStatus(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       <ManageSnoozedTabs
         snoozedTabItems={snoozedTabItems}
         loading={loading}
@@ -282,6 +545,8 @@ function Options(): React.ReactElement {
         calculateTimeLeft={calculateTimeLeft}
         openTabInNewTab={openTabInNewTab}
         onEditTab={openEditTab}
+        onExport={exportSnoozedTabs}
+        onImportFileSelected={importSnoozedTabsFromFile}
       />
       {/* Edit Snooze Modal */}
       <div className={`modal ${editingTab ? 'modal-open' : ''}`}>
