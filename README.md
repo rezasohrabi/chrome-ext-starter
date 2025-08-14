@@ -9,6 +9,7 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 - 🔔 **Notifications**: Get notified when your snoozed tabs wake up
 - 📋 **Snooze Manager**: View and manage all your snoozed tabs in one place
 - 🌙 **Dark Mode Support**: Easy on the eyes with automatic theme detection
+- 💾 **Backup & Restore**: Export and import snoozed tabs as versioned JSON
 
 ## Technology Stack
 
@@ -25,6 +26,23 @@ Temporarily put tabs to sleep and have them reappear exactly when you need them!
 2. 🖱️ Right-click on a tab or click the extension icon to snooze a tab
 3. ⏱️ Select when you want the tab to reappear
 4. 💤 The tab will close and reopen at the specified time
+
+### Backup and Restore (Export/Import)
+
+- 📤 **Export**: Open the Options page → Manage Snoozed Tabs → click "Export JSON" to download all current snoozed tabs. The file includes metadata:
+
+  - `exportedWithVersion`: the Snoozr version used for export
+  - `exportedAt`: export timestamp
+  - `snoozedTabs`: the exported tabs
+
+- 📥 **Import**: On the same page, click "Import JSON" and choose a Snoozr export file.
+  - You will be asked to choose:
+    - Replace: replaces your current snoozed tabs with the imported list (existing alarms are cleared and recreated)
+    - Merge: adds imported tabs to your current list (alarms are created only for the imported tabs; conflicting IDs are safely regenerated)
+  - Snoozr validates imported entries and skips invalid ones; a summary indicates how many were imported/skipped.
+  - Backward compatibility: Snoozr accepts both the new export format and legacy raw arrays of `SnoozedTab`.
+
+Note: exported JSON contains tab URLs and titles. Treat it as sensitive data.
 
 ## Development
 
