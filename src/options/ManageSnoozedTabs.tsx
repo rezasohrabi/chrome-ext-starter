@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   AlarmClock,
   AlertCircle,
   Clock,
+  Download,
   Pencil,
   RotateCcw,
   Sunrise,
   Trash2,
+  Upload,
 } from 'lucide-react';
 
 import { SnoozedTab } from '../types';
@@ -20,6 +22,8 @@ interface ManageSnoozedTabsProps {
   calculateTimeLeft: (wakeTime: number) => string;
   openTabInNewTab: (tab: SnoozedTab) => void;
   onEditTab?: (tab: SnoozedTab) => void;
+  onExport?: () => void;
+  onImportFileSelected?: (file: File) => void;
 }
 
 function ManageSnoozedTabs({
@@ -31,7 +35,15 @@ function ManageSnoozedTabs({
   calculateTimeLeft,
   openTabInNewTab,
   onEditTab = undefined,
+  onExport = undefined,
+  onImportFileSelected = undefined,
 }: ManageSnoozedTabsProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const triggerImport = (): void => {
+    fileInputRef.current?.click();
+  };
+
   const renderLoading = () => (
     <div className='p-8 text-center'>
       <span className='loading loading-spinner loading-lg' />
@@ -166,9 +178,46 @@ function ManageSnoozedTabs({
   return (
     <div className='card bg-base-200 border-base-300 mb-8 border shadow-2xl'>
       <div className='card-body'>
-        <h1 className='card-title text-primary mb-2 text-2xl font-bold'>
-          Manage Snoozed Tabs
-        </h1>
+        <div className='mb-2 flex items-center justify-between'>
+          <h1 className='card-title text-primary text-2xl font-bold'>
+            Manage Snoozed Tabs
+          </h1>
+          <div className='flex items-center gap-2'>
+            {onExport && (
+              <button
+                type='button'
+                className='btn btn-outline btn-sm'
+                onClick={onExport}
+              >
+                <Download className='mr-1 h-4 w-4' strokeWidth={2} />
+                Export JSON
+              </button>
+            )}
+            {onImportFileSelected && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  accept='application/json,.json'
+                  className='hidden'
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) onImportFileSelected(file);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                />
+                <button
+                  type='button'
+                  className='btn btn-outline btn-sm'
+                  onClick={triggerImport}
+                >
+                  <Upload className='mr-1 h-4 w-4' strokeWidth={2} />
+                  Import JSON
+                </button>
+              </>
+            )}
+          </div>
+        </div>
         {content}
       </div>
     </div>
@@ -177,6 +226,8 @@ function ManageSnoozedTabs({
 
 ManageSnoozedTabs.defaultProps = {
   onEditTab: undefined,
+  onExport: undefined,
+  onImportFileSelected: undefined,
 };
 
 export default ManageSnoozedTabs;

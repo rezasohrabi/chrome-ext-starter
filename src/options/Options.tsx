@@ -1,9 +1,9 @@
 import React, { useEffect, useId, useState } from 'react';
-import { AlertCircle, Github, Lightbulb } from 'lucide-react';
+import { AlertCircle, CheckCircle, Github, Lightbulb } from 'lucide-react';
 
 import OneTimeSnoozeFields from '../components/OneTimeSnoozeFields';
 import RecurrenceFields from '../components/RecurrenceFields';
-import { RecurrencePattern, SnoozedTab } from '../types';
+import { RecurrencePattern, SnoozedTab, SnoozedTabsExport } from '../types';
 import {
   calculateTimeLeft,
   computeWeekdayIndices,
@@ -24,6 +24,10 @@ import SnoozrSettingsCard from './SnoozrSettingsCard';
 function Options(): React.ReactElement {
   const [snoozedTabItems, setSnoozedTabs] = useState<SnoozedTab[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importStatus, setImportStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
   useTheme();
   // Edit modal state
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
@@ -57,6 +61,113 @@ function Options(): React.ReactElement {
       // Silently handle error without console.error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportSnoozedTabs = async (): Promise<void> => {
+    try {
+      const { snoozedTabs = [] } =
+        await chrome.storage.local.get('snoozedTabs');
+      const payload: SnoozedTabsExport = {
+        exportedWithVersion: chrome.runtime.getManifest().version,
+        exportedAt: Date.now(),
+        snoozedTabs: snoozedTabs as SnoozedTab[],
+      };
+      const dataStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `snoozr-snoozed-tabs-${ts}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (_) {
+      // Silent
+    }
+  };
+
+  const importSnoozedTabsFromFile = async (file: File): Promise<void> => {
+    try {
+      const text = await file.text();
+      let snoozedTabsArray: SnoozedTab[] | null = null;
+
+      try {
+        const parsed = JSON.parse(text) as SnoozedTabsExport | SnoozedTab[];
+        if (Array.isArray(parsed)) {
+          snoozedTabsArray = parsed;
+        } else if (
+          parsed &&
+          typeof parsed === 'object' &&
+          Array.isArray((parsed as SnoozedTabsExport).snoozedTabs)
+        ) {
+          snoozedTabsArray = (parsed as SnoozedTabsExport).snoozedTabs;
+        }
+      } catch {
+        setImportStatus({ type: 'error', message: 'Invalid JSON file.' });
+        return;
+      }
+
+      if (!Array.isArray(snoozedTabsArray)) {
+        setImportStatus({
+          type: 'error',
+          message: 'File format not recognized. Expected a Snoozr export JSON.',
+        });
+        return;
+      }
+
+      // Basic validation: keep only items with numeric id and wakeTime
+      const validTabs = snoozedTabsArray.filter(
+        (t) => typeof t?.id === 'number' && typeof t?.wakeTime === 'number'
+      );
+      if (validTabs.length === 0) {
+        setImportStatus({
+          type: 'error',
+          message: 'No valid snoozed tabs found in the file.',
+        });
+        return;
+      }
+
+      // Replace existing tabs in storage and recreate alarms
+      await chrome.storage.local.set({ snoozedTabs: validTabs });
+      setSnoozedTabs([...validTabs].sort((a, b) => a.wakeTime - b.wakeTime));
+
+      // Clear existing alarms for current set in memory; best-effort
+      try {
+        const existingAlarms = await chrome.alarms.getAll();
+        const toClear = existingAlarms
+          .filter((a) => a.name.startsWith('snoozed-tab-'))
+          .map((a) => a.name);
+        await Promise.all(toClear.map((name) => chrome.alarms.clear(name)));
+      } catch {
+        // ignore
+      }
+
+      // Recreate alarms for imported tabs
+      await Promise.all(
+        validTabs.map(async (tab) => {
+          try {
+            await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+              when: tab.wakeTime,
+            });
+          } catch {
+            // ignore
+          }
+        })
+      );
+
+      const skipped = snoozedTabsArray.length - validTabs.length;
+      setImportStatus({
+        type: 'success',
+        message:
+          skipped > 0
+            ? `Imported ${validTabs.length} tabs. Skipped ${skipped} invalid entries.`
+            : `Imported ${validTabs.length} tabs successfully.`,
+      });
+    } catch (_) {
+      setImportStatus({ type: 'error', message: 'Failed to import file.' });
     }
   };
 
@@ -273,6 +384,31 @@ function Options(): React.ReactElement {
 
   return (
     <div className='container mx-auto max-w-6xl p-4'>
+      {importStatus && (
+        <div
+          className={`alert mb-4 ${
+            importStatus.type === 'error' ? 'alert-error' : 'alert-success'
+          }`}
+        >
+          <div className='flex items-center'>
+            {importStatus.type === 'error' ? (
+              <AlertCircle className='h-5 w-5' strokeWidth={2} />
+            ) : (
+              <CheckCircle className='h-5 w-5' strokeWidth={2} />
+            )}
+            <span className='ml-2'>{importStatus.message}</span>
+          </div>
+          <div className='ml-auto'>
+            <button
+              type='button'
+              className='btn btn-ghost btn-sm'
+              onClick={() => setImportStatus(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       <ManageSnoozedTabs
         snoozedTabItems={snoozedTabItems}
         loading={loading}
@@ -282,6 +418,8 @@ function Options(): React.ReactElement {
         calculateTimeLeft={calculateTimeLeft}
         openTabInNewTab={openTabInNewTab}
         onEditTab={openEditTab}
+        onExport={exportSnoozedTabs}
+        onImportFileSelected={importSnoozedTabsFromFile}
       />
       {/* Edit Snooze Modal */}
       <div className={`modal ${editingTab ? 'modal-open' : ''}`}>
