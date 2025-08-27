@@ -1,5 +1,7 @@
 # 🚀 Chrome Extension Starter Kit 
 
+See [my realworld demo](https://chromewebstore.google.com/detail/suivi-social-media-influe/goooadfoacpehibpinikfnphknmmgbph) using this starter
+
 Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.
 
 Why choose this template? 🤔 Well, there are countless templates out there, but if you're eyeing Tailwind for your Chrome extension, you're in luck! 🎉 With this template, diving into extension development becomes a breeze – no configuration needed! 💻
