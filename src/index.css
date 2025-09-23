@@ -84,3 +84,11 @@
   font-family: 'Inter', sans-serif !important;
   letter-spacing: normal;
 }
+
+.popup-root.modal-open,
+.popup-root:has(.modal-open),
+.popup-root:has(.modal[open]),
+.popup-root:has(.modal:target),
+.popup-root:has(.modal-toggle:checked) {
+  scrollbar-gutter: auto;
+}

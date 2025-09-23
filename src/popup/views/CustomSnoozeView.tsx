@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Pencil } from 'lucide-react';
 
+import EditTabMetaModal from '../../components/EditTabMetaModal';
 import OneTimeSnoozeFields from '../../components/OneTimeSnoozeFields';
 import { nextDayISOForDatetimeLocal } from '../../utils/datetime';
 
@@ -142,25 +143,19 @@ function CustomSnoozeView(): React.ReactElement {
                 <Pencil className='h-3.5 w-3.5' strokeWidth={2} />
               </button>
             </div>
-            {isEditing && (
-              <div className='mt-2 space-y-2'>
-                <input
-                  type='text'
-                  className='input input-bordered input-sm w-full'
-                  placeholder='Edit tab title'
-                  maxLength={200}
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                />
-                <textarea
-                  className='textarea textarea-bordered textarea-sm w-full'
-                  placeholder='Add a note (optional)'
-                  maxLength={300}
-                  value={editedNote}
-                  onChange={(e) => setEditedNote(e.target.value)}
-                />
-              </div>
-            )}
+            <EditTabMetaModal
+              open={isEditing}
+              titleValue={editedTitle}
+              noteValue={editedNote}
+              setTitleValue={setEditedTitle}
+              setNoteValue={setEditedNote}
+              onClear={() => {
+                setEditedTitle('');
+                setEditedNote('');
+                setIsEditing(false);
+              }}
+              onClose={() => setIsEditing(false)}
+            />
           </div>
         )}
 
