@@ -14,6 +14,7 @@ type StartupCallback = () => Promise<void> | void;
 // Mock chrome APIs
 const mockTabsCreate = vi.fn();
 const mockAlarmsCreate = vi.fn();
+const mockAlarmsClear = vi.fn();
 const mockStorageLocalGet = vi.fn();
 const mockStorageLocalSet = vi.fn();
 const mockNotificationsCreate = vi.fn();
@@ -29,6 +30,7 @@ global.chrome = {
       }),
     },
     create: mockAlarmsCreate,
+    clear: mockAlarmsClear,
   },
   runtime: {
     onStartup: {
@@ -89,6 +91,7 @@ describe('Background Script', () => {
     vi.mocked(getSnoozrSettings).mockReset();
     mockTabsCreate.mockReset();
     mockAlarmsCreate.mockReset();
+    mockAlarmsClear.mockReset();
     mockStorageLocalGet.mockReset();
     mockStorageLocalSet.mockReset();
     mockNotificationsCreate.mockReset();
@@ -345,6 +348,171 @@ describe('Background Script', () => {
         ])
       );
       expect(snoozedTabsCall.length).toBe(2);
+    });
+  });
+
+  describe('regression: startup + alarm duplicate open (current behavior)', () => {
+    it('opens the same overdue tab only once when startup and alarm overlap (expected behavior)', async () => {
+      const now = Date.now();
+      const overdue: SnoozedTab = {
+        id: 9999,
+        url: 'https://dup.example.com',
+        title: 'Dup',
+        wakeTime: now - 10_000,
+        createdAt: now - 20_000,
+        isRecurring: false,
+      };
+
+      // Use stateful storage mocks to reflect updates performed by background code
+      const store: { snoozedTabs: SnoozedTab[] } = { snoozedTabs: [overdue] };
+      mockStorageLocalGet.mockImplementation(async () => ({ ...store }));
+      mockStorageLocalSet.mockImplementation(
+        async (val: { snoozedTabs?: SnoozedTab[] }) => {
+          if (val && Array.isArray(val.snoozedTabs)) {
+            store.snoozedTabs = val.snoozedTabs;
+          }
+        }
+      );
+
+      // open in foreground for determinism
+      vi.mocked(getSnoozrSettings).mockResolvedValue({
+        startOfDay: '09:00',
+        endOfDay: '18:00',
+        startOfWeek: 1,
+        startOfWeekend: 6,
+        openInBg: false,
+      });
+
+      expect(startupListenerCallback).toBeDefined();
+      if (!startupListenerCallback)
+        throw new Error('startup listener not defined');
+      expect(alarmListenerCallback).toBeDefined();
+      if (!alarmListenerCallback) throw new Error('alarm listener not defined');
+
+      // Simulate race: during the first tabs.create (startup), fire the alarm for the same tab
+      const alarm: chrome.alarms.Alarm = {
+        name: `snoozed-tab-${overdue.id}`,
+        scheduledTime: now,
+      } as chrome.alarms.Alarm;
+      mockTabsCreate.mockImplementationOnce(async () => {
+        await alarmListenerCallback!(alarm);
+        return undefined as unknown as chrome.tabs.Tab;
+      });
+
+      await startupListenerCallback();
+
+      // Allow the queued alarm task to process
+      await new Promise<void>((r) => {
+        setTimeout(() => r(), 0);
+      });
+
+      // Desired behavior: only one open
+      expect(mockTabsCreate).toHaveBeenCalledTimes(1);
+      expect(mockTabsCreate).toHaveBeenNthCalledWith(1, {
+        url: overdue.url,
+        active: true,
+      });
+    });
+  });
+
+  describe('startup deduplication for duplicate storage entries', () => {
+    it('opens a duplicate-overdue entry only once', async () => {
+      const now = Date.now();
+      const overdue: SnoozedTab = {
+        id: 2024,
+        url: 'https://dedup.example.com',
+        title: 'Dedup',
+        wakeTime: now - 1000,
+        createdAt: now - 2000,
+        isRecurring: false,
+      };
+
+      mockStorageLocalGet.mockResolvedValue({
+        snoozedTabs: [overdue, { ...overdue }],
+      });
+      vi.mocked(getSnoozrSettings).mockResolvedValue({
+        startOfDay: '09:00',
+        endOfDay: '18:00',
+        startOfWeek: 1,
+        startOfWeekend: 6,
+        openInBg: true,
+      });
+
+      expect(startupListenerCallback).toBeDefined();
+      if (!startupListenerCallback)
+        throw new Error('startup listener not defined');
+
+      await startupListenerCallback();
+
+      expect(mockTabsCreate).toHaveBeenCalledTimes(1);
+      expect(mockTabsCreate).toHaveBeenCalledWith({
+        url: overdue.url,
+        active: false,
+      });
+      // clear called for the id
+      expect(mockAlarmsClear).toHaveBeenCalledWith(`snoozed-tab-${overdue.id}`);
+    });
+  });
+
+  describe('race window: alarm fires before startup storage.set completes', () => {
+    it('still opens only once when alarm fires before storage rewrite', async () => {
+      const now = Date.now();
+      const overdue: SnoozedTab = {
+        id: 8080,
+        url: 'https://race.example.com',
+        title: 'Race',
+        wakeTime: now - 10_000,
+        createdAt: now - 20_000,
+        isRecurring: false,
+      };
+
+      // Stateful store with overdue
+      const store: { snoozedTabs: SnoozedTab[] } = { snoozedTabs: [overdue] };
+      mockStorageLocalGet.mockImplementation(async () => ({ ...store }));
+
+      // When startup attempts to write the new snoozedTabs, trigger the alarm BEFORE we mutate store
+      mockStorageLocalSet.mockImplementation(
+        async (val: { snoozedTabs?: SnoozedTab[] }) => {
+          // Fire the alarm listener first, simulating alarm occurring while startup is still working
+          const alarm: chrome.alarms.Alarm = {
+            name: `snoozed-tab-${overdue.id}`,
+            scheduledTime: now,
+          } as chrome.alarms.Alarm;
+          if (alarmListenerCallback) {
+            await alarmListenerCallback(alarm);
+          }
+          // Now apply the storage mutation that removes the overdue entry
+          if (val && Array.isArray(val.snoozedTabs)) {
+            store.snoozedTabs = val.snoozedTabs;
+          }
+        }
+      );
+
+      vi.mocked(getSnoozrSettings).mockResolvedValue({
+        startOfDay: '09:00',
+        endOfDay: '18:00',
+        startOfWeek: 1,
+        startOfWeekend: 6,
+        openInBg: false,
+      });
+
+      expect(startupListenerCallback).toBeDefined();
+      if (!startupListenerCallback)
+        throw new Error('startup listener not defined');
+
+      await startupListenerCallback();
+
+      // Allow any queued tasks to flush
+      await new Promise<void>((r) => {
+        setTimeout(() => r(), 0);
+      });
+
+      // Only one open despite alarm firing during startup window
+      expect(mockTabsCreate).toHaveBeenCalledTimes(1);
+      expect(mockTabsCreate).toHaveBeenCalledWith({
+        url: overdue.url,
+        active: true,
+      });
     });
   });
 });

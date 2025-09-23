@@ -43,9 +43,18 @@ async function processQueue() {
   }
 }
 
-function addTaskToQueue(task: () => Promise<void>) {
-  taskQueue.push(task);
-  processQueue();
+function addTaskToQueue(task: () => Promise<void>): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const wrappedTask = async () => {
+      try {
+        await task();
+      } finally {
+        resolve();
+      }
+    };
+    taskQueue.push(wrappedTask);
+    processQueue();
+  });
 }
 
 // Function to create or update the context menu
@@ -230,19 +239,84 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onStartup.addListener(async () => {
   logger.debug('onStartup: Checking for overdue snoozed tabs');
   try {
-    const { snoozedTabs: currentSnoozedTabs = [] } =
-      (await chrome.storage.local.get('snoozedTabs')) as {
-        snoozedTabs?: SnoozedTab[];
-      };
-    const settings = await getSnoozrSettings(); // Get settings once
-    const now = Date.now();
+    await addTaskToQueue(async () => {
+      const { snoozedTabs: currentSnoozedTabs = [] } =
+        (await chrome.storage.local.get('snoozedTabs')) as {
+          snoozedTabs?: SnoozedTab[];
+        };
+      const settings = await getSnoozrSettings(); // Get settings once
+      const now = Date.now();
 
-    const processedTabsPromises = currentSnoozedTabs.map(
-      async (tab: SnoozedTab) => {
-        if (tab.wakeTime <= now) {
-          // Tab is due or overdue
+      // Classify tabs by due-ness
+      const dueTabs = currentSnoozedTabs.filter((t) => t.wakeTime <= now);
+      const keptTabs = currentSnoozedTabs.filter((t) => t.wakeTime > now);
+
+      // Compute reschedules for recurring tabs concurrently
+      const rescheduledResults = await Promise.all(
+        dueTabs.map(async (tab) => {
+          if (tab.isRecurring && tab.recurrencePattern) {
+            const nextWakeTime = await calculateNextWakeTime(
+              tab.recurrencePattern
+            );
+            if (nextWakeTime) {
+              const newTabId = Date.now() + Math.floor(Math.random() * 10000);
+              logger.debug('onStartup: Rescheduling recurring tab', {
+                oldTabId: tab.id,
+                newTabId,
+                nextWakeTime,
+              });
+              return {
+                ...(tab as SnoozedTab),
+                id: newTabId,
+                wakeTime: nextWakeTime,
+              } as SnoozedTab;
+            }
+            logger.debug('onStartup: End of recurrence for overdue tab', {
+              tabId: tab.id,
+            });
+          }
+          return null;
+        })
+      );
+      const rescheduledTabs = rescheduledResults.filter(
+        (t): t is SnoozedTab => t !== null
+      );
+
+      const newSnoozedTabsList = [...keptTabs, ...rescheduledTabs];
+
+      // Update storage BEFORE opening tabs to avoid alarm handler finding stale entries
+      await chrome.storage.local.set({ snoozedTabs: newSnoozedTabsList });
+      logger.debug('onStartup: Snoozed tabs list updated', {
+        count: newSnoozedTabsList.length,
+      });
+
+      // Deduplicate due tabs by id to avoid double-open from duplicate entries
+      const uniqueDueTabs = Array.from(
+        dueTabs
+          .reduce((acc, tab) => {
+            if (!acc.has(tab.id)) acc.set(tab.id, tab);
+            return acc;
+          }, new Map<number, SnoozedTab>())
+          .values()
+      );
+
+      // Clear alarms for all due tabs (old ids)
+      await Promise.all(
+        uniqueDueTabs.map(async (tab) => {
+          try {
+            await chrome.alarms.clear(`snoozed-tab-${tab.id}`);
+          } catch (e) {
+            if (chrome.runtime.lastError) {
+              // Acknowledge
+            }
+          }
+        })
+      );
+
+      // Open all due/overdue tabs now
+      await Promise.all(
+        uniqueDueTabs.map(async (tab) => {
           if (tab.url) {
-            // Open the tab
             try {
               await chrome.tabs.create({
                 url: tab.url,
@@ -263,75 +337,32 @@ chrome.runtime.onStartup.addListener(async () => {
               }
             }
           }
+        })
+      );
 
-          // If it's a recurring tab, schedule the next occurrence
-          if (tab.isRecurring && tab.recurrencePattern) {
-            const nextWakeTime = await calculateNextWakeTime(
-              tab.recurrencePattern
-            );
-
-            if (nextWakeTime) {
-              // Create a new tab entry with a new ID and updated wake time
-              const newTabId = Date.now() + Math.floor(Math.random() * 10000); // Ensure unique ID
-              const updatedTab: SnoozedTab = {
-                ...tab,
-                id: newTabId,
-                wakeTime: nextWakeTime,
-              };
-              logger.debug('onStartup: Rescheduling recurring tab', {
-                oldTabId: tab.id,
-                newTabId,
-                nextWakeTime,
-              });
-              return updatedTab; // Return the rescheduled tab
-            }
-            logger.debug('onStartup: End of recurrence for overdue tab', {
-              tabId: tab.id,
-            });
-            // If recurrence ended (nextWakeTime is null), the tab is effectively removed.
-            return null;
+      // Create alarms for all tabs that are still snoozed or have been rescheduled
+      const alarmsToCreatePromises = newSnoozedTabsList.map(async (tab) => {
+        try {
+          await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
+            when: tab.wakeTime,
+          });
+          logger.debug('onStartup: Alarm created/recreated for tab', {
+            tabId: tab.id,
+            wakeTime: tab.wakeTime,
+          });
+        } catch (e) {
+          logger.error('onStartup: Failed to create alarm for tab', {
+            tabId: tab.id,
+            error: e,
+          });
+          if (chrome.runtime.lastError) {
+            /* acknowledged */
           }
-          // If non-recurring and due, it's opened and then effectively removed.
-          return null;
         }
-        // Tab is not yet due, keep it.
-        return tab;
-      }
-    );
-
-    const resolvedTabs = await Promise.all(processedTabsPromises);
-    const newSnoozedTabsList = resolvedTabs.filter(
-      (tab) => tab !== null
-    ) as SnoozedTab[];
-
-    // Update storage with the correctly filtered and updated list
-    await chrome.storage.local.set({ snoozedTabs: newSnoozedTabsList });
-    logger.debug('onStartup: Snoozed tabs list updated', {
-      count: newSnoozedTabsList.length,
+      });
+      await Promise.all(alarmsToCreatePromises);
+      logger.debug('onStartup: Finished processing alarms for remaining tabs');
     });
-
-    // Create alarms for all tabs that are still snoozed or have been rescheduled
-    const alarmsToCreatePromises = newSnoozedTabsList.map(async (tab) => {
-      try {
-        await chrome.alarms.create(`snoozed-tab-${tab.id}`, {
-          when: tab.wakeTime,
-        });
-        logger.debug('onStartup: Alarm created/recreated for tab', {
-          tabId: tab.id,
-          wakeTime: tab.wakeTime,
-        });
-      } catch (e) {
-        logger.error('onStartup: Failed to create alarm for tab', {
-          tabId: tab.id,
-          error: e,
-        });
-        if (chrome.runtime.lastError) {
-          /* acknowledged */
-        }
-      }
-    });
-    await Promise.all(alarmsToCreatePromises);
-    logger.debug('onStartup: Finished processing alarms for remaining tabs');
   } catch (error) {
     logger.error('Error during onStartup processing', { error });
     if (chrome.runtime.lastError) {
