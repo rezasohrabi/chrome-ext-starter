@@ -210,6 +210,63 @@ describe('Background Script', () => {
       );
       expect(mockStorageLocalSet).toHaveBeenCalled();
     });
+
+    it('includes note in notification message when present', async () => {
+      const settings: SnoozrSettings = {
+        startOfDay: '09:00',
+        endOfDay: '18:00',
+        startOfWeek: 1,
+        startOfWeekend: 6,
+        openInBg: false,
+      };
+      vi.mocked(getSnoozrSettings).mockResolvedValue(settings);
+      const withNote: SnoozedTab = {
+        ...mockSnoozedTab,
+        note: 'Finish report and email Alice',
+      };
+      mockStorageLocalGet.mockResolvedValue({ snoozedTabs: [withNote] });
+
+      expect(alarmListenerCallback).toBeDefined();
+      if (!alarmListenerCallback) throw new Error('alarm listener not defined');
+      alarmListenerCallback(mockAlarm);
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+      });
+
+      expect(mockNotificationsCreate).toHaveBeenCalled();
+      const notifArg = mockNotificationsCreate.mock.calls.at(-1)?.[0] as
+        | chrome.notifications.NotificationOptions<true>
+        | undefined;
+      expect(notifArg).toBeDefined();
+      expect(notifArg?.message).toContain(
+        'Note: Finish report and email Alice'
+      );
+    });
+
+    it('does not include Note label when no note is set', async () => {
+      const settings: SnoozrSettings = {
+        startOfDay: '09:00',
+        endOfDay: '18:00',
+        startOfWeek: 1,
+        startOfWeekend: 6,
+        openInBg: false,
+      };
+      vi.mocked(getSnoozrSettings).mockResolvedValue(settings);
+      mockStorageLocalGet.mockResolvedValue({ snoozedTabs: [mockSnoozedTab] });
+
+      expect(alarmListenerCallback).toBeDefined();
+      if (!alarmListenerCallback) throw new Error('alarm listener not defined');
+      alarmListenerCallback(mockAlarm);
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+      });
+
+      const notifArg = mockNotificationsCreate.mock.calls.at(-1)?.[0] as
+        | chrome.notifications.NotificationOptions<true>
+        | undefined;
+      expect(notifArg).toBeDefined();
+      expect(notifArg?.message).not.toMatch(/\bNote:/);
+    });
   });
 
   describe('chrome.runtime.onStartup Listener (tabsToWake)', () => {
