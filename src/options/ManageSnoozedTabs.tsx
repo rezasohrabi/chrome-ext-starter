@@ -119,7 +119,7 @@ function ManageSnoozedTabs({
                         />
                       </div>
                     )}
-                    {tab.note && tab.note.trim().length > 0 && (
+                    {tab.note?.trim() && (
                       <div className='tooltip tooltip-right tooltip-info ml-1.5'>
                         <div className='tooltip-content max-w-[320px] text-left whitespace-pre-wrap'>
                           {tab.note}
