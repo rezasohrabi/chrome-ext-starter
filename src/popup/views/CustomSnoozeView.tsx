@@ -58,6 +58,13 @@ function CustomSnoozeView(): React.ReactElement {
     });
   };
 
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
+    e.preventDefault();
+    await handleSnooze();
+  };
+
   if (loading) {
     return (
       <div className='flex min-h-[300px] items-center justify-center'>
@@ -112,23 +119,21 @@ function CustomSnoozeView(): React.ReactElement {
           </div>
         )}
 
-        <div className='mb-4 space-y-4'>
-          <p className='text-sm'>Select when to bring this tab back:</p>
-          <OneTimeSnoozeFields
-            mode='single'
-            dateTime={customDate}
-            setDateTime={(val) => setCustomDate(val)}
-            ids={{ dateTimeId }}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className='mb-4 space-y-4'>
+            <p className='text-sm'>Select when to bring this tab back:</p>
+            <OneTimeSnoozeFields
+              mode='single'
+              dateTime={customDate}
+              setDateTime={(val) => setCustomDate(val)}
+              ids={{ dateTimeId }}
+            />
+          </div>
 
-        <button
-          type='button'
-          className='btn btn-primary btn-block'
-          onClick={handleSnooze}
-        >
-          Snooze until selected time
-        </button>
+          <button type='submit' className='btn btn-primary btn-block'>
+            Snooze until selected time
+          </button>
+        </form>
       </div>
     </div>
   );
