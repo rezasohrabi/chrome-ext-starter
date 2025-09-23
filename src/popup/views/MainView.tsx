@@ -11,6 +11,7 @@ import {
   Flag,
   Hourglass,
   Moon,
+  Pencil,
   RotateCcw,
   Settings,
   Star,
@@ -31,6 +32,18 @@ function MainView(): React.ReactElement {
   const { theme, toggleTheme } = useTheme();
   const [settings] = useSettings();
   const [presets] = useSnoozePresets();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState<string>('');
+  const [editedNote, setEditedNote] = useState<string>('');
+  const toggleEdit = (): void => {
+    setIsEditing((prev) => {
+      const next = !prev;
+      if (next && !editedTitle && activeTab?.title) {
+        setEditedTitle(activeTab.title);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -91,11 +104,14 @@ function MainView(): React.ReactElement {
         (option.days ? option.days * 24 * 60 * 60 * 1000 : 0);
     }
 
+    const titleFromEditor = editedTitle.trim();
+    const noteFromEditor = editedNote.trim();
     const tabInfo = {
       id: activeTab.id,
       url: activeTab.url,
-      title: activeTab.title,
+      title: titleFromEditor || activeTab.title,
       favicon: activeTab.favIconUrl,
+      note: noteFromEditor ? noteFromEditor.slice(0, 300) : undefined,
       createdAt: Date.now(),
       wakeTime,
     };
@@ -167,7 +183,7 @@ function MainView(): React.ReactElement {
         {activeTab && (
           <div className='card card-border'>
             <div className='card-body'>
-              <div className='mb-2 flex items-center'>
+              <div className='mb-2 flex w-full items-center'>
                 {activeTab.favIconUrl && (
                   <img
                     src={activeTab.favIconUrl}
@@ -178,10 +194,38 @@ function MainView(): React.ReactElement {
                     }}
                   />
                 )}
-                <span className='truncate text-sm font-medium'>
-                  {activeTab.title}
+                <span className='flex-1 truncate text-sm font-medium'>
+                  {editedTitle || activeTab.title}
                 </span>
+                <button
+                  type='button'
+                  className='btn btn-ghost btn-xs ml-2'
+                  onClick={toggleEdit}
+                  aria-label='Edit title and note'
+                  title='Edit title and note'
+                >
+                  <Pencil className='h-3.5 w-3.5' strokeWidth={2} />
+                </button>
               </div>
+              {isEditing && (
+                <div className='space-y-2'>
+                  <input
+                    type='text'
+                    className='input input-bordered input-sm w-full'
+                    placeholder='Edit tab title'
+                    maxLength={200}
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                  />
+                  <textarea
+                    className='textarea textarea-bordered textarea-sm w-full'
+                    placeholder='Add a note (optional)'
+                    maxLength={300}
+                    value={editedNote}
+                    onChange={(e) => setEditedNote(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

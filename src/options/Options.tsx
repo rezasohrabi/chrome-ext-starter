@@ -36,6 +36,8 @@ function Options(): React.ReactElement {
   useTheme();
   // Edit modal state
   const [editingTab, setEditingTab] = useState<SnoozedTab | null>(null);
+  const [editedTitle, setEditedTitle] = useState<string>('');
+  const [editedNote, setEditedNote] = useState<string>('');
   // One-time edit field (combined datetime-local)
   const [oneTimeDate, setOneTimeDate] = useState<string>('');
   // Recurring edit fields
@@ -309,6 +311,8 @@ function Options(): React.ReactElement {
 
   const openEditTab = (tab: SnoozedTab): void => {
     setEditingTab(tab);
+    setEditedTitle(tab.title || '');
+    setEditedNote(tab.note || '');
     const pattern = tab.recurrencePattern;
     const now = new Date();
     // Initialize one-time fields from current wake time
@@ -369,6 +373,8 @@ function Options(): React.ReactElement {
 
   const saveEditedRecurrence = async (): Promise<void> => {
     if (!editingTab) return;
+    const titleFromEditor = editedTitle.trim();
+    const noteFromEditor = editedNote.trim();
     if (editingTab.isRecurring) {
       const recurrencePattern: RecurrencePattern = {
         type: recurrenceType,
@@ -391,6 +397,8 @@ function Options(): React.ReactElement {
           t.id === editingTab.id
             ? {
                 ...t,
+                title: titleFromEditor || t.title,
+                note: noteFromEditor ? noteFromEditor.slice(0, 300) : undefined,
                 isRecurring: true,
                 recurrencePattern,
                 wakeTime: nextWakeTime,
@@ -421,7 +429,14 @@ function Options(): React.ReactElement {
       }
       try {
         const updatedTabs = snoozedTabItems.map((t) =>
-          t.id === editingTab.id ? { ...t, wakeTime: nextWakeTime } : t
+          t.id === editingTab.id
+            ? {
+                ...t,
+                title: titleFromEditor || t.title,
+                note: noteFromEditor ? noteFromEditor.slice(0, 300) : undefined,
+                wakeTime: nextWakeTime,
+              }
+            : t
         );
         await chrome.storage.local.set({ snoozedTabs: updatedTabs });
         await chrome.alarms.clear(`snoozed-tab-${editingTab.id}`);
@@ -564,8 +579,22 @@ function Options(): React.ReactElement {
                   }}
                 />
               )}
-              <div className='truncate text-sm font-medium'>
-                {editingTab.title || editingTab.url}
+              <div className='flex-1'>
+                <input
+                  type='text'
+                  className='input input-bordered input-sm w-full'
+                  placeholder='Edit tab title'
+                  maxLength={200}
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                />
+                <textarea
+                  className='textarea textarea-bordered textarea-sm mt-2 w-full'
+                  placeholder='Add a note (optional)'
+                  maxLength={300}
+                  value={editedNote}
+                  onChange={(e) => setEditedNote(e.target.value)}
+                />
               </div>
             </div>
           )}
