@@ -26,9 +26,11 @@ import {
   GripVertical,
   Hourglass,
   Moon,
+  Pencil,
   Star,
   Sun,
   Sunrise,
+  Trash2,
   Volleyball,
 } from 'lucide-react';
 
@@ -240,20 +242,29 @@ function SnoozePresetsCard({
                           </div>
                         </div>
                         <div className='flex flex-shrink-0 items-center gap-2'>
-                          <button
-                            type='button'
-                            className='btn btn-sm'
-                            onClick={() => setEditing(p)}
+                          <div className='tooltip' data-tip='Edit'>
+                            <button
+                              type='button'
+                              className='btn btn-outline btn-sm'
+                              onClick={() => setEditing(p)}
+                              aria-label='Edit preset'
+                            >
+                              <Pencil className='h-4 w-4' strokeWidth={2} />
+                            </button>
+                          </div>
+                          <div
+                            className='tooltip tooltip-error'
+                            data-tip='Delete preset'
                           >
-                            Edit
-                          </button>
-                          <button
-                            type='button'
-                            className='btn btn-sm btn-error'
-                            onClick={() => removePreset(p.id)}
-                          >
-                            Remove
-                          </button>
+                            <button
+                              type='button'
+                              className='btn btn-outline btn-error btn-sm'
+                              onClick={() => removePreset(p.id)}
+                              aria-label='Delete preset'
+                            >
+                              <Trash2 className='h-4 w-4' strokeWidth={2} />
+                            </button>
+                          </div>
                         </div>
                       </SortableRow>
                     );

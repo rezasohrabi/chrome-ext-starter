@@ -23,6 +23,7 @@ export interface SnoozedTab {
   url?: string;
   title?: string;
   favicon?: string;
+  note?: string;
   createdAt: number;
   wakeTime: number;
   isRecurring?: boolean;

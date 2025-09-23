@@ -6,6 +6,7 @@ import {
   Download,
   Pencil,
   RotateCcw,
+  StickyNote,
   Sunrise,
   Trash2,
   Upload,
@@ -115,6 +116,18 @@ function ManageSnoozedTabs({
                         <RotateCcw
                           className='text-accent ml-1.5 h-3.5 w-3.5'
                           strokeWidth={2.5}
+                        />
+                      </div>
+                    )}
+                    {tab.note?.trim() && (
+                      <div className='tooltip tooltip-right tooltip-info ml-1.5'>
+                        <div className='tooltip-content max-w-[320px] text-left whitespace-pre-wrap'>
+                          {tab.note}
+                        </div>
+                        <StickyNote
+                          className='text-accent h-3.5 w-3.5'
+                          strokeWidth={2.5}
+                          aria-label='View note'
                         />
                       </div>
                     )}

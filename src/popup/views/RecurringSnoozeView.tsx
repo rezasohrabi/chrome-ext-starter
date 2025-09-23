@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { Pencil } from 'lucide-react';
 
+import EditTabMetaModal from '../../components/EditTabMetaModal';
 import RecurrenceFields from '../../components/RecurrenceFields';
 import { RecurrencePattern, SnoozedTab } from '../../types';
 import { computeWeekdayIndices, getAllDayIndices } from '../../utils/datetime';
@@ -26,6 +28,18 @@ function RecurringSnoozeView(): React.ReactElement {
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
   const [endDate, setEndDate] = useState<string>('');
   const [settings] = useSettings();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState<string>('');
+  const [editedNote, setEditedNote] = useState<string>('');
+  const toggleEdit = (): void => {
+    setIsEditing((prev) => {
+      const next = !prev;
+      if (next && !editedTitle && activeTab?.title) {
+        setEditedTitle(activeTab.title);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const getCurrentTab = async (): Promise<void> => {
@@ -91,11 +105,14 @@ function RecurringSnoozeView(): React.ReactElement {
     const firstWakeTimeMs = await calculateNextWakeTime(recurrencePattern);
     if (!firstWakeTimeMs) return;
 
+    const titleFromEditor = editedTitle.trim();
+    const noteFromEditor = editedNote.trim();
     const tabInfo: SnoozedTab = {
       id: activeTab.id,
       url: activeTab.url,
-      title: activeTab.title,
+      title: titleFromEditor || activeTab.title,
       favicon: activeTab.favIconUrl,
+      note: noteFromEditor ? noteFromEditor.slice(0, 300) : undefined,
       createdAt: Date.now(),
       wakeTime: firstWakeTimeMs,
       isRecurring: true,
@@ -158,20 +175,43 @@ function RecurringSnoozeView(): React.ReactElement {
         </div>
 
         {activeTab && (
-          <div className='bg-base-100 mb-4 flex items-center rounded-lg p-3 shadow-2xs'>
-            {activeTab.favIconUrl && (
-              <img
-                src={activeTab.favIconUrl}
-                alt='Tab favicon'
-                className='mr-3 h-5 w-5'
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            )}
-            <div className='truncate text-sm font-medium'>
-              {activeTab.title}
+          <div className='bg-base-100 mb-4 rounded-lg p-3 shadow-2xs'>
+            <div className='flex w-full items-center'>
+              {activeTab.favIconUrl && (
+                <img
+                  src={activeTab.favIconUrl}
+                  alt='Tab favicon'
+                  className='mr-3 h-5 w-5'
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <div className='flex-1 truncate text-sm font-medium'>
+                {editedTitle || activeTab.title}
+              </div>
+              <button
+                type='button'
+                className='btn btn-ghost btn-xs ml-2'
+                onClick={toggleEdit}
+                aria-label='Edit title and note'
+              >
+                <Pencil className='h-3.5 w-3.5' strokeWidth={2} />
+              </button>
             </div>
+            <EditTabMetaModal
+              open={isEditing}
+              titleValue={editedTitle}
+              noteValue={editedNote}
+              setTitleValue={setEditedTitle}
+              setNoteValue={setEditedNote}
+              onClear={() => {
+                setEditedTitle('');
+                setEditedNote('');
+                setIsEditing(false);
+              }}
+              onClose={() => setIsEditing(false)}
+            />
           </div>
         )}
 
