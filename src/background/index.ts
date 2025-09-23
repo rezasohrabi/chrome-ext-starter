@@ -44,12 +44,23 @@ async function processQueue() {
 }
 
 function addTaskToQueue(task: () => Promise<void>): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     const wrappedTask = async () => {
       try {
         await task();
-      } finally {
         resolve();
+      } catch (error) {
+        // Ensure the rejection reason is an Error instance
+        const normalizedError =
+          error instanceof Error
+            ? error
+            : new Error(
+                typeof error === 'string' ? error : JSON.stringify(error)
+              );
+        // Propagate error to the caller while still allowing the queue to continue
+        reject(normalizedError);
+        // Re-throw so processQueue can handle logging and continue
+        throw normalizedError;
       }
     };
     taskQueue.push(wrappedTask);
@@ -153,13 +164,17 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
 
     try {
+      const baseMessage = `Your ${
+        tabToWake.isRecurring ? 'recurring' : 'snoozed'
+      } tab "${tabToWake.title}" is now open.`;
+      const noteSnippet = tabToWake.note
+        ? `\nNote: ${tabToWake.note.slice(0, 180)}`
+        : '';
       chrome.notifications.create({
         type: 'basic',
         iconUrl: tabToWake.favicon || 'icons/icon128.png',
         title: 'Tab Awakened!',
-        message: `Your ${
-          tabToWake.isRecurring ? 'recurring' : 'snoozed'
-        } tab "${tabToWake.title}" is now open.`,
+        message: `${baseMessage}${noteSnippet}`,
       });
       logger.debug('Notification created for woken tab', {
         tabId: tabToWake.id,
