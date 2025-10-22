@@ -86,6 +86,75 @@ describe('presets utils', () => {
     expect(t2).toBeGreaterThanOrEqual(now + 60 * 60 * 1000);
   });
 
+  it('calculatePresetWakeTime never schedules rule presets in the past near boundaries', () => {
+    const baseNow = Date.UTC(2025, 6, 12, 8, 16); // Saturday, July 12 2025 10:16 CEST (UTC+2)
+    const saturdayMorning = baseNow;
+
+    const tonightPreset: SnoozePreset = {
+      id: 'tonight',
+      titleTemplate: 'Tonight',
+      kind: 'rule',
+      rule: 'tonight',
+    };
+    const tonightSettings: SnoozrSettings = {
+      ...baseSettings,
+      endOfDay: '18:08',
+    };
+    const tonightWake = calculatePresetWakeTime(
+      tonightPreset,
+      tonightSettings,
+      saturdayMorning
+    );
+    expect(tonightWake).toBeGreaterThan(saturdayMorning);
+
+    const tomorrowPreset: SnoozePreset = {
+      id: 'tomorrow',
+      titleTemplate: 'Tomorrow',
+      kind: 'rule',
+      rule: 'tomorrow',
+    };
+    const tomorrowWake = calculatePresetWakeTime(
+      tomorrowPreset,
+      baseSettings,
+      saturdayMorning
+    );
+    expect(tomorrowWake).toBeGreaterThan(saturdayMorning);
+
+    const weekendPreset = DEFAULT_SNOOZE_PRESETS.find(
+      (p) => p.id === 'weekend'
+    );
+    expect(weekendPreset).toBeDefined();
+    const weekendSettings: SnoozrSettings = {
+      ...baseSettings,
+      startOfDay: '09:08',
+      startOfWeekend: 6, // Saturday
+    };
+    const weekendWake = calculatePresetWakeTime(
+      weekendPreset!,
+      weekendSettings,
+      saturdayMorning
+    );
+    expect(weekendWake).toBeGreaterThan(saturdayMorning);
+
+    const label = buildPresetTitle(weekendPreset!, weekendSettings);
+    expect(label).toContain('This Weekend');
+    expect(new Date(weekendWake).getUTCDay()).toBe(6);
+
+    const mondayLate = Date.UTC(2025, 6, 14, 21, 30); // Monday 23:30 CEST
+    const nextWeekPreset: SnoozePreset = {
+      id: 'next_week',
+      titleTemplate: 'Next Week',
+      kind: 'rule',
+      rule: 'next_week',
+    };
+    const nextWeekWake = calculatePresetWakeTime(
+      nextWeekPreset,
+      weekendSettings,
+      mondayLate
+    );
+    expect(nextWeekWake).toBeGreaterThan(mondayLate);
+  });
+
   it('getSnoozePresets returns defaults when storage empty', async () => {
     vi.mocked(chrome.storage.sync.get).mockImplementation(
       (keys: unknown, cb: (res: Record<string, unknown>) => void) => {
