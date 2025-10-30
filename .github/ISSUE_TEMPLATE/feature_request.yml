@@ -21,7 +21,7 @@ body:
       label: Proposed solution
       description: Describe your idea. Include UI/UX notes if relevant.
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: alternatives
