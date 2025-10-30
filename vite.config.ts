@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import fs from 'fs';
 import path, { resolve } from 'path';
-import { crx } from '@crxjs/vite-plugin';
+import { crx, ManifestV3Export } from '@crxjs/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig, Plugin } from 'vite';
 
@@ -34,8 +34,33 @@ export function touchGlobalCSSPlugin({
   };
 }
 
+const chromeSpecificManifest = {
+  options_page: 'src/options/index.html',
+  background: {
+    service_worker: 'src/background/index.ts',
+    type: 'module',
+  },
+};
+
+const firefoxSpecificManifest = {
+  options_ui: {
+    page: 'src/options/index.html',
+    browser_style: false,
+  },
+  background: {
+    scripts: ['src/background/index.ts'],
+  },
+};
+
+type Mode = 'chrome' | 'firefox';
+
+const generateCrossBrowserManifest = (mode: Mode) => ({
+  ...manifest,
+  ...(mode === 'firefox' ? firefoxSpecificManifest : chromeSpecificManifest),
+});
+
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     touchGlobalCSSPlugin({
@@ -43,7 +68,8 @@ export default defineConfig({
       watchFiles: ['.tsx'],
     }),
     crx({
-      manifest,
+      manifest: generateCrossBrowserManifest(mode as Mode) as ManifestV3Export,
+      browser: mode === 'firefox' ? 'firefox' : 'chrome',
       contentScripts: {
         injectCss: true,
       },
@@ -51,7 +77,7 @@ export default defineConfig({
   ],
   server: {
     cors: {
-      origin: [/chrome-extension:\/\//],
+      origin: [/chrome-extension:\/\//, /moz-extension:\/\//],
     },
   },
   resolve: {
@@ -62,6 +88,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: mode === 'firefox' ? 'dist_firefox' : 'dist_chrome',
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
@@ -76,4 +103,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

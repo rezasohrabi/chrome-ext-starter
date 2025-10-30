@@ -6,22 +6,34 @@ import { createRoot } from 'react-dom/client';
  * @returns {ReactRoot} - React root rendered inside the shadow root.
  */
 export default function createShadowRoot(styles: string) {
-  // Create a container element to hold the shadow root
-  const container = document.createElement('div');
+  const host = document.createElement('div');
+  const shadow = host.attachShadow({ mode: 'open' });
 
-  // Attach a shadow root to the container element
-  const shadow = container.attachShadow({ mode: 'open' });
+  // Create an internal mount node to avoid Xray wrapper issues in Firefox
+  const mount = document.createElement('div');
+  shadow.appendChild(mount);
 
-  // Create a new CSS style sheet and apply the specified styles
-  const globalStyleSheet = new CSSStyleSheet();
-  globalStyleSheet.replaceSync(styles);
+  // Apply styles: prefer constructable stylesheets, fallback safely
+  try {
+    const supportsConstructable =
+      'adoptedStyleSheets' in shadow &&
+      'replaceSync' in
+        (CSSStyleSheet.prototype as unknown as { replaceSync?: unknown });
+    if (supportsConstructable) {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(styles);
+      shadow.adoptedStyleSheets = [sheet];
+    } else {
+      const styleEl = document.createElement('style');
+      styleEl.textContent = styles;
+      shadow.appendChild(styleEl);
+    }
+  } catch {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = styles;
+    shadow.appendChild(styleEl);
+  }
 
-  // Apply the style sheet to the shadow root
-  shadow.adoptedStyleSheets = [globalStyleSheet];
-
-  // Append the container element to the document body
-  document.body.appendChild(container);
-
-  // Return a React root created inside the shadow root
-  return createRoot(shadow);
+  document.body.appendChild(host);
+  return createRoot(mount);
 }

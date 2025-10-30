@@ -3,19 +3,23 @@
   "displayName": "Chrome Extension Starter",
   "description": "Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "vite --mode chrome",
+    "dev:firefox": "vite build --mode firefox --watch",
+    "build": "tsc && vite build --mode chrome",
+    "build:firefox": "tsc && vite build --mode firefox",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:spell": "cspell --no-progress --cache \"**/*.{ts,tsx,js,jsx,json,css,scss,md}\"",
     "preview": "vite preview",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky"
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -28,10 +32,12 @@
     "@types/node": "^20.12.2",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
+    "@types/webextension-polyfill": "^0.12.4",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.5.1",
     "autoprefixer": "^10.4.19",
+    "cspell": "^9.2.2",
     "daisyui": "^5.0.46",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",

@@ -26,6 +26,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
-  "exclude": ["node_modules", "dist"],
+  "exclude": ["node_modules", "dist", ".husky", ".cursor"],
   "types": ["chrome", "node"]
 }

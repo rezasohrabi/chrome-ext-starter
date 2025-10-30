@@ -1,0 +1,28 @@
+version: '0.2'
+language: en
+ignorePaths:
+  - node_modules
+  - dist
+  - dist_*
+  - vendor
+  - pnpm-lock.yaml
+  - '**/*.map'
+  - '**/*.ttf'
+  - '.husky'
+  - '.cursor'
+dictionaries:
+  - en_US
+  - softwareTerms
+  - typescript
+  - node
+words:
+  - CRX
+  - DaisyUI
+  - HMR
+  - MV3
+  - pnpm
+  - Tailwind
+  - tsconfig
+  - tsx
+  - Vite
+  - webextension

@@ -7,18 +7,20 @@ alwaysApply: false
 ## Storage
 
 ```ts
-chrome.storage.local.set({ key: value });
-chrome.storage.local.get(['key'], (result) => {
-  console.log(result.key);
-});
+import browser from 'webextension-polyfill';
+
+await browser.storage.local.set({ key: value });
+const { key } = await browser.storage.local.get(['key']);
 ```
 
 ## Message Passing
 
 ```ts
-chrome.runtime.sendMessage({ action: 'getData' });
+import browser from 'webextension-polyfill';
 
-chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+await browser.runtime.sendMessage({ action: 'getData' });
+
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === 'getData') {
     sendResponse({ data: 'response' });
   }
@@ -28,7 +30,10 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 ## Active Tab
 
 ```ts
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  const activeTab = tabs[0];
+import browser from 'webextension-polyfill';
+
+const [activeTab] = await browser.tabs.query({
+  active: true,
+  currentWindow: true,
 });
 ```
