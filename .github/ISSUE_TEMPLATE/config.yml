@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/rezasohrabi/chrome-ext-starter/discussions
+    about: Use GitHub Discussions for Q&A and general ideas
+
+
