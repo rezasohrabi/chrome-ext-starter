@@ -1,0 +1,34 @@
+---
+description: Common Chrome extension patterns and examples
+globs: ['src/**/*.{ts,tsx}']
+alwaysApply: false
+---
+
+## Storage
+
+```ts
+chrome.storage.local.set({ key: value });
+chrome.storage.local.get(['key'], (result) => {
+  console.log(result.key);
+});
+```
+
+## Message Passing
+
+```ts
+chrome.runtime.sendMessage({ action: 'getData' });
+
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.action === 'getData') {
+    sendResponse({ data: 'response' });
+  }
+});
+```
+
+## Active Tab
+
+```ts
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  const activeTab = tabs[0];
+});
+```

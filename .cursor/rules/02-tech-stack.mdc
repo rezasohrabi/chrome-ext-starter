@@ -1,0 +1,21 @@
+---
+description: Technology stack and constraints
+globs: ['**/*']
+alwaysApply: true
+---
+
+## Technology Stack
+
+- Build: Vite 6 with `@crxjs/vite-plugin`
+- Language: TypeScript 5 (strict)
+- UI: React 19 (functional components)
+- Styling: Tailwind CSS 4 + DaisyUI
+- Package manager: pnpm (enforced via preinstall)
+- Node: >= 20.x
+- Quality: ESLint, Prettier, Husky, lint-staged, commitlint
+
+### Aliases
+
+- `@/*` → `src/*`
+- `@utils` → `src/utils`
+- `@assets` → `src/assets`

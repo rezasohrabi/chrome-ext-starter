@@ -1,0 +1,35 @@
+---
+description: React + TypeScript component architecture and import conventions
+globs: ['src/**/*.{ts,tsx}']
+alwaysApply: true
+---
+
+## Component Rules
+
+- Use functional components only, with explicit `JSX.Element` return type.
+- Prefer small, focused components; colocate related code.
+- Name components with PascalCase; files as `ComponentName.tsx`.
+- Use hooks; avoid class components.
+- Avoid inline styles; prefer Tailwind + DaisyUI classes.
+- Include `data-theme` on root containers for popup/options/content.
+
+### Template
+
+```tsx
+import { JSX } from 'react';
+
+export default function ComponentName(): JSX.Element {
+  return (
+    <div id='my-ext' className='container' data-theme='light'>
+      {/* content */}
+    </div>
+  );
+}
+```
+
+## Import Ordering
+
+1. External packages
+2. Absolute imports (aliases)
+3. Relative imports
+4. Styles last

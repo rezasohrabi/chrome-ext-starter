@@ -1,0 +1,49 @@
+---
+description: Troubleshooting guide for diagnosing and resolving issues
+globs: ['**/*']
+alwaysApply: false
+---
+
+# Troubleshooting Guide
+
+## Provide
+
+- Issue description and context (popup, background, content)
+- Errors and reproduction steps
+- Recent code changes
+
+## Common issues
+
+### Message passing
+
+- Match message types between sender/receiver
+- Use correct API: `runtime.sendMessage` vs `tabs.sendMessage`
+- Ensure background service worker is running
+- Register listeners once in correct context
+
+### Storage
+
+- Confirm `storage` permission exists
+- Watch for quota limits and large payloads
+- Validate read/write structures
+- Add error handling and defaults
+
+### UI rendering
+
+- Check React hook dependencies
+- Validate theme classes and DaisyUI usage
+- Verify Tailwind classes after HMR/build
+- Inspect Shadow DOM root and styles
+
+### Permissions
+
+- Verify manifest permissions and host patterns
+- Handle runtime permission requests if needed
+- Review console for permission errors
+
+## Debugging
+
+- Use `console.log` in each context
+- Inspect service worker in `chrome://extensions`
+- Use DevTools for popup/options and Elements panel for Shadow DOM
+- Verify `src/manifest.ts` for MV3 correctness

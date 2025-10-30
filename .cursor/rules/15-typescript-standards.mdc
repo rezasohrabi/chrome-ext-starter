@@ -1,0 +1,28 @@
+---
+description: TypeScript and React coding standards
+globs: ['src/**/*.{ts,tsx}']
+alwaysApply: true
+---
+
+## TypeScript standards
+
+- Use strict types; avoid `any`. Prefer precise unions and generics.
+- Exported APIs must have explicit types. Component return type: `JSX.Element`.
+- Name functions as verbs; variables as descriptive nouns.
+- Prefer early returns and shallow nesting.
+- Do not catch errors without handling; avoid broad try/catch.
+- Keep module side-effects minimal; prefer pure utilities.
+
+## React standards
+
+- Functional components only; use hooks.
+- Derive state when possible; avoid redundant state.
+- Memoize expensive computations and callbacks when needed.
+- Keep components small and focused; extract subcomponents.
+
+## Imports
+
+1. External packages
+2. Aliases: `@`, `@utils`, `@assets`
+3. Relative imports
+4. Styles last

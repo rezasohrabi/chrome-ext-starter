@@ -1,0 +1,48 @@
+---
+description: Chrome permissions and APIs usage patterns
+globs: ['src/**/*.{ts,tsx}']
+alwaysApply: true
+---
+
+## Permissions
+
+- Manifest requests: `activeTab`, `storage`. Content scripts run on `<all_urls>`.
+- Request only what you need; consider host permissions when applicable.
+
+## Storage
+
+```ts
+// Save
+await chrome.storage.local.set({ key: value });
+// Read
+const { key } = await chrome.storage.local.get(['key']);
+```
+
+- Use `storage.sync` for small cross-device preferences; `storage.local` for larger or device-specific data.
+- Handle quota errors and fallback gracefully.
+
+## Messaging
+
+```ts
+// Content/Popup → Background
+const res = await chrome.runtime.sendMessage({ type: 'getData' });
+
+// Background
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  (async () => {
+    if (msg.type === 'getData') sendResponse({ data: 'ok' });
+  })();
+  return true; // async response
+});
+```
+
+## Tabs
+
+```ts
+const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+```
+
+## Error handling
+
+- Wrap Chrome API calls with try/catch when appropriate.
+- Check `chrome.runtime.lastError` in callback-based APIs.

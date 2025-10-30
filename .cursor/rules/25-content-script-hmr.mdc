@@ -1,0 +1,23 @@
+---
+description: Content script boot flows for dev (HMR) and production
+globs: ['src/content/**/*']
+alwaysApply: true
+---
+
+## Dev (HMR) – `src/content/index.dev.tsx`
+
+- Import CSS normally to let Vite inject `<style data-vite-dev-id>`.
+- Create a container, attach Shadow DOM, and move the dev style element into the shadow root.
+- Render `Content` into the shadow root. This enables CSS HMR without restart.
+
+## Production – `src/content/index.prod.tsx`
+
+- Import bundled CSS inline: `import styles from '@assets/styles/index.css?inline'`.
+- Use `createShadowRoot(styles)` to create a shadow root and apply stylesheet via `adoptedStyleSheets`.
+- Render `Content` via the returned React root.
+
+## Rules
+
+- Never render directly into the page DOM; always inside Shadow DOM.
+- Keep root container with `id='my-ext'` and `data-theme`.
+- Use `:host` and `#my-ext`-aware CSS (PostCSS prefixes selectors automatically).

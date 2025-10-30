@@ -1,0 +1,24 @@
+---
+description: Entry point indexing all project rules for Cursor
+globs: ['**/*']
+alwaysApply: true
+---
+
+# Chrome Extension Starter – Rules Index
+
+Use these scoped rules while generating code:
+
+- 01-overview.mdc – overview and AI goals
+- 02-tech-stack.mdc – stack, aliases, constraints
+- 05-daisyui.mdc – DaisyUI usage guide and links
+- 10-component-architecture.mdc – React/TS component rules
+- 15-typescript-standards.mdc – TypeScript best practices
+- 20-styling-and-shadow-dom.mdc – Tailwind, Shadow DOM
+- 25-content-script-hmr.mdc – Dev/Prod and HMR specifics
+- 30-extension-structure.mdc – MV3 manifest/pages/scripts
+- 35-permissions-and-apis.mdc – Chrome APIs and permissions
+- 40-build-and-config.mdc – Vite, PostCSS, Tailwind, TS
+- 50-quality-and-workflow.mdc – scripts, commits, DOs/DON'Ts
+- 60-examples.mdc – common extension code snippets
+- 70-feature-generation.mdc – guide to add new features
+- 80-troubleshooting.mdc – debugging and resolution steps

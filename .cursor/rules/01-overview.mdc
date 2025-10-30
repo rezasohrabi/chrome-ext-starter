@@ -1,0 +1,17 @@
+---
+description: High-level overview and goals for the Chrome Extension starter
+globs: ['**/*']
+alwaysApply: true
+---
+
+## Project Overview
+
+This repository is a Chrome Extension starter using Vite, React, TypeScript, Tailwind CSS, DaisyUI, and the CRX plugin. It provides a production-ready structure for MV3 extensions with content scripts rendered in Shadow DOM, themed UI, and strict TypeScript/ESLint/Prettier settings.
+
+### Goals for AI-generated code
+
+- Follow the existing architecture and naming conventions
+- Prefer functional React components with strict TypeScript types
+- Use Tailwind + DaisyUI classes for all styling
+- Keep content scripts isolated via Shadow DOM and `:host` styling
+- Respect dev/prod behaviors in `src/manifest.ts`

@@ -1,0 +1,29 @@
+---
+description: Workflow, linting/formatting, and DOs/DON'Ts
+globs: ['**/*']
+alwaysApply: true
+---
+
+## Scripts
+
+- `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm preview`.
+- Use pnpm only (enforced by preinstall).
+
+## Commit & CI
+
+- Conventional commits (commitlint).
+- Pre-commit: lint-staged (ESLint + Prettier).
+
+## DOs
+
+- Use functional React + strict TS types.
+- Use Tailwind/DaisyUI classes for styling.
+- Keep content scripts in Shadow DOM.
+- Include `data-theme` on root containers.
+- Use aliases for imports.
+
+## DON'Ts
+
+- No class components; no inline styles.
+- Do not mutate DOM outside Shadow DOM in content scripts.
+- Avoid absolute px in custom CSS; prefer utilities.

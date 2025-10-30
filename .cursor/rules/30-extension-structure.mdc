@@ -1,0 +1,33 @@
+---
+description: MV3 manifest, pages, content scripts, and permissions
+globs:
+  [
+    'src/manifest.ts',
+    'src/content/**/*',
+    'src/background/**/*',
+    'src/popup/**/*',
+    'src/options/**/*',
+  ]
+alwaysApply: true
+---
+
+## Manifest (MV3)
+
+- `src/manifest.ts` builds the manifest via CRX plugin.
+- Dev name suffix: ` ➡️ Dev`.
+- Background: `src/background/index.ts` (module service worker).
+- Action popup: `src/popup/index.html`.
+- Options page: `src/options/index.html`.
+- Permissions: `activeTab`, `storage`; content scripts on `<all_urls>`.
+
+## Content Scripts
+
+- Two entry variants:
+  - Dev: `src/content/index.dev.tsx` (special HMR flow for CSS)
+  - Prod: `src/content/index.prod.tsx` (Shadow DOM + adoptedStyleSheets)
+- Render `Content` component into Shadow DOM.
+
+## Pages (Popup/Options)
+
+- Boot via `createShadowRoot(styles)` and render component.
+- Root container should include `id='my-ext'` and `data-theme`.

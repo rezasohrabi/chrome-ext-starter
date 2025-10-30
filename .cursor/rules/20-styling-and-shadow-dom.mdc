@@ -1,0 +1,30 @@
+---
+description: Tailwind, DaisyUI, and Shadow DOM styling practices
+globs: ['src/**/*.{tsx,css}']
+alwaysApply: true
+---
+
+## Styling Rules
+
+- Use Tailwind classes; leverage DaisyUI components (e.g., `btn`, `input`).
+- No inline styles; compose utilities instead.
+- Respect theme via `data-theme` on the root container.
+- Fonts and global CSS are imported from `src/assets/styles/index.css`.
+
+## Shadow DOM Rules (content scripts)
+
+- Render inside Shadow DOM using `createShadowRoot(styles)`.
+- Inject styles via `adoptedStyleSheets` in production, or dev HMR flow.
+- Use `:host` and `#my-ext` prefix-aware selectors.
+
+### Content script boot (prod)
+
+```tsx
+import styles from '@assets/styles/index.css?inline';
+import createShadowRoot from '@utils/createShadowRoot';
+
+import Content from './Content';
+
+const root = createShadowRoot(styles);
+root.render(<Content />);
+```

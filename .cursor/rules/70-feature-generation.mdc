@@ -1,0 +1,54 @@
+---
+description: Guide for generating new features in this Chrome Extension starter
+globs: ['src/**/*.{ts,tsx}']
+alwaysApply: false
+---
+
+# New Feature Generation
+
+Use this when implementing a new feature for the extension.
+
+## Provide upfront
+
+- Feature name and short description
+- Where it lives (popup, options, content script, background)
+- Required permissions or APIs (if any)
+
+## Architecture
+
+1. UI
+   - Functional React components with hooks
+   - DaisyUI components + Tailwind utilities
+   - Theme-aware via `data-theme`
+2. Data
+   - Prefer `chrome.storage.sync` for small preferences; `local` for larger data
+   - Define strict TypeScript interfaces
+   - Handle errors and quotas gracefully
+3. Communication
+   - Use message passing between contexts
+   - Prefer `async/await`; return `true` for async listeners in background
+4. Chrome APIs
+   - Request only necessary permissions (update `src/manifest.ts` if needed)
+   - Validate API results; provide fallbacks
+
+## Deliverables
+
+- UI components (popup/options/content) with tests as appropriate
+- Background/content utilities or services
+- Types and storage helpers
+- Manifest updates (when needed) and migration notes
+
+## Example skeleton
+
+```tsx
+import { JSX } from 'react';
+
+export default function FeaturePanel(): JSX.Element {
+  return (
+    <div id='my-ext' className='container' data-theme='light'>
+      <h2 className='text-lg font-semibold'>My Feature</h2>
+      <button className='btn btn-primary'>Do action</button>
+    </div>
+  );
+}
+```

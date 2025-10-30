@@ -1,0 +1,31 @@
+---
+description: Build system, Vite/CRX, PostCSS/Tailwind, TypeScript config
+globs:
+  ['vite.config.ts', 'postcss.config.js', 'tailwind.config.js', 'tsconfig.json']
+alwaysApply: true
+---
+
+## Vite
+
+- Use React plugin and CRX plugin.
+- Keep `touchGlobalCSSPlugin` for CSS HMR.
+- Maintain path aliases (`@`, `@utils`, `@assets`).
+- Fonts output under `assets/fonts/`.
+
+## PostCSS
+
+- Tailwind plugin first.
+- Prefix selectors with `#my-ext` via `postcss-prefix-selector` (transform `:root`/`:host`/`html`/`body` to `:host`).
+- Convert `rem` → `px`.
+- Autoprefixer last.
+
+## Tailwind
+
+- Content paths: `./index.html`, `./src/**/*.{js,ts,jsx,tsx}`.
+- DaisyUI plugin with `light` and `dark` themes.
+
+## TypeScript
+
+- `strict` on; `moduleResolution: bundler`; `jsx: react-jsx`.
+- BaseUrl + `paths` alias `@*` → `src/*`.
+- No emits; rely on Vite build.

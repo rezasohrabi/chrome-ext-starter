@@ -1,0 +1,84 @@
+---
+description: Documentation and usage guidance for DaisyUI 5 with Tailwind CSS 4
+globs: ['src/**/*.{tsx,css,html}']
+alwaysApply: false
+---
+
+# DaisyUI 5
+
+- Docs: https://daisyui.com
+- Editor guide: https://daisyui.com/docs/editor/
+- Release notes: https://daisyui.com/docs/v5/
+- Upgrade guide: https://daisyui.com/docs/upgrade/
+
+## Install & project alignment
+
+- Tailwind CSS 4 is required; we already import it in `src/assets/styles/index.css` with `@import 'tailwindcss';` and `@plugin "daisyui";`.
+- Avoid custom global CSS; prefer DaisyUI classes + Tailwind utilities.
+
+## Usage rules
+
+1. Prefer DaisyUI component classes plus Tailwind utilities. Avoid custom CSS.
+2. You may tweak via utilities; if specificity blocks, use the `!` suffix sparingly (e.g., `bg-red-500!`).
+3. Keep layouts responsive using Tailwind responsive prefixes (e.g., `sm:`, `lg:`).
+4. Use only valid DaisyUI class names or Tailwind utilities.
+5. Respect theme by using semantic colors (e.g., `bg-primary`, `text-base-content`).
+6. Root element should include `id='my-ext'` and `data-theme`.
+
+## Common components (snippets)
+
+```tsx
+// Buttons
+<button type='button' className='btn btn-primary'>Primary</button>
+<button type='button' className='btn btn-outline btn-secondary'>Secondary</button>
+<button type='button' className='btn btn-ghost'>Ghost</button>
+```
+
+```tsx
+// Inputs (composed)
+<label className='input input-bordered flex items-center gap-2'>
+  <input type='text' className='grow' placeholder='Search' />
+</label>
+```
+
+```tsx
+// Card
+<div className='card bg-base-100 w-80 shadow'>
+  <div className='card-body'>
+    <h2 className='card-title'>Title</h2>
+    <p>Body</p>
+    <div className='card-actions justify-end'>
+      <button className='btn btn-primary'>Action</button>
+    </div>
+  </div>
+</div>
+```
+
+```tsx
+// Modal (HTML dialog API)
+<button onClick={() => (document.getElementById('m') as HTMLDialogElement).showModal()} className='btn'>Open</button>
+<dialog id='m' className='modal'>
+  <div className='modal-box'>Hello</div>
+  <form method='dialog' className='modal-backdrop'>
+    <button>close</button>
+  </form>
+</dialog>
+```
+
+## Colors and themes
+
+- Prefer semantic colors: `primary`, `secondary`, `accent`, `neutral`, `base-*`, `info`, `success`, `warning`, `error`.
+- Use `*-content` for foreground where applicable.
+- Switch themes by setting `data-theme` on the root container.
+
+## Minimal theme config (optional)
+
+```css
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+```
+
+For full catalog and advanced configuration, consult the official docs above.
