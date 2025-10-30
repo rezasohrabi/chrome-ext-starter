@@ -38,7 +38,7 @@ body:
         Node: 20.11.1
         pnpm: 8.15.0
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: description
@@ -54,7 +54,7 @@ body:
       label: Steps to reproduce
       placeholder: 1) ..., 2) ..., 3) ...
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: logs
@@ -83,6 +83,6 @@ body:
         - label: I tried `pnpm build` and saw the same behavior
           required: false
         - label: I included environment details and reproduction steps
-          required: true
+          required: false
 
 

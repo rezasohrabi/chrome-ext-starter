@@ -62,9 +62,9 @@ pnpm build:firefox
 
 We use commitlint with the Conventional Commits spec. Examples:
 
-- `feat(content): render toolbar into Shadow DOM`
-- `fix(popup): prevent service worker timeout on first load`
-- `chore(deps): bump vite to 6.3.x`
+- `feat: render toolbar into Shadow DOM`
+- `fix: prevent service worker timeout on first load`
+- `chore: bump vite to 6.3.x`
 
 Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `build`, `ci`.
 
@@ -89,8 +89,8 @@ Create short, imperative subject lines; include an optional scope (folder or are
 ### Opening a Pull Request
 
 - Ensure your branch is up-to-date with `main`.
-- Squash or keep commits clean and meaningful.
-- Fill out the PR template completely (it helps reviewers a lot).
+- Keep commits clean and meaningful.
+- Fill out the PR template completely (it helps reviewer a lot).
 - Link related issues and include screenshots/GIFs when the UI changes.
 
 ### Reporting bugs / requesting features

@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question
-    url: https://github.com/rezasohrabi/chrome-ext-starter/discussions
-    about: Use GitHub Discussions for Q&A and general ideas
+    url: https://github.com/rezasohrabi/chrome-ext-starter/issues/new/choose
+    about: Use Issues (choose template) for Q&A or general ideas if Discussions are not enabled
 
 
