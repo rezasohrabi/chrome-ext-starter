@@ -1,0 +1,51 @@
+---
+description: Cross-browser support (Chrome + Firefox) guidelines
+globs: ['**/*']
+alwaysApply: true
+---
+
+## Cross-browser targets
+
+- Chromium (Chrome/Edge) and Firefox (Gecko)
+- MV3 manifest; avoid Chrome-only APIs in runtime code
+
+## Manifest
+
+- Keep MV3 structure compatible with both browsers
+- Include Firefox metadata (ignored by Chrome):
+  - `browser_specific_settings.gecko.id`
+  - `browser_specific_settings.gecko.strict_min_version`
+
+## Shadow DOM styles
+
+- Prefer Constructable Stylesheets when available
+- Fallback to `<style>` tag in ShadowRoot for Firefox
+
+## Dev server
+
+- Allow both `chrome-extension://` and `moz-extension://` origins during development
+
+## API usage
+
+- Prefer the promise-based polyfill via `@/utils/browser` (webextension-polyfill)
+- Example:
+
+```ts
+import browser from 'webextension-polyfill';
+
+await browser.runtime.sendMessage({ type: 'ping' });
+```
+
+- Avoid `chrome.scripting` unless you include a fallback; define content scripts in manifest instead
+
+## Styling
+
+- Use DaisyUI + Tailwind utilities; avoid CSS features with limited Firefox support unless polyfilled
+
+## Testing checklist
+
+- Build Firefox: `pnpm build:firefox` (outputs `dist-firefox/`)
+- Load built extension in Firefox (`about:debugging` → This Firefox → Load Temporary Add-on → select `dist-firefox/manifest.json`)
+- Verify content scripts render in Shadow DOM, with styles applied
+- Verify popup/options render and theme switching
+- Verify background worker responds to messages

@@ -1,5 +1,5 @@
 ---
-description: Chrome permissions and APIs usage patterns
+description: WebExtension permissions and APIs usage patterns
 globs: ['src/**/*.{ts,tsx}']
 alwaysApply: true
 ---
@@ -13,9 +13,9 @@ alwaysApply: true
 
 ```ts
 // Save
-await chrome.storage.local.set({ key: value });
+await browser.storage.local.set({ key: value });
 // Read
-const { key } = await chrome.storage.local.get(['key']);
+const { key } = await browser.storage.local.get(['key']);
 ```
 
 - Use `storage.sync` for small cross-device preferences; `storage.local` for larger or device-specific data.
@@ -24,11 +24,13 @@ const { key } = await chrome.storage.local.get(['key']);
 ## Messaging
 
 ```ts
+import browser from 'webextension-polyfill';
+
 // Content/Popup → Background
-const res = await chrome.runtime.sendMessage({ type: 'getData' });
+const res = await browser.runtime.sendMessage({ type: 'getData' });
 
 // Background
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     if (msg.type === 'getData') sendResponse({ data: 'ok' });
   })();
@@ -39,10 +41,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 ## Tabs
 
 ```ts
-const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+import browser from 'webextension-polyfill';
+
+const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 ```
 
 ## Error handling
 
-- Wrap Chrome API calls with try/catch when appropriate.
-- Check `chrome.runtime.lastError` in callback-based APIs.
+- Wrap WebExtension API calls with try/catch when appropriate.
+- For callback-based APIs, check `browser.runtime.lastError` when applicable; the polyfill maps most errors to promise rejections.

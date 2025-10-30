@@ -12,11 +12,6 @@ export default defineManifest({
   }`,
   version: packageData.version,
   description: packageData.description,
-  background: {
-    service_worker: 'src/background/index.ts',
-    type: 'module',
-  },
-  options_page: 'src/options/index.html',
   action: {
     default_popup: 'src/popup/index.html',
     default_icon: {

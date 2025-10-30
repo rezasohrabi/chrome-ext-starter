@@ -21,13 +21,13 @@ Use this when implementing a new feature for the extension.
    - DaisyUI components + Tailwind utilities
    - Theme-aware via `data-theme`
 2. Data
-   - Prefer `chrome.storage.sync` for small preferences; `local` for larger data
+   - Prefer `browser.storage.sync` (via `webextension-polyfill`) for small preferences; `local` for larger data
    - Define strict TypeScript interfaces
    - Handle errors and quotas gracefully
 3. Communication
-   - Use message passing between contexts
+   - Use message passing between contexts via `webextension-polyfill` (`import browser from 'webextension-polyfill'`)
    - Prefer `async/await`; return `true` for async listeners in background
-4. Chrome APIs
+4. WebExtension APIs
    - Request only necessary permissions (update `src/manifest.ts` if needed)
    - Validate API results; provide fallbacks
 

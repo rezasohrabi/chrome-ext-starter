@@ -6,13 +6,13 @@ export default function Popup(): JSX.Element {
       <button type='button' className='btn btn-outline'>
         Default
       </button>
-      <button type='button' className='btn btn-outline btn-primary'>
+      <button type='button' className='btn btn-primary btn-outline'>
         Primary
       </button>
-      <button type='button' className='btn btn-outline btn-secondary'>
+      <button type='button' className='btn btn-secondary btn-outline'>
         Secondary
       </button>
-      <button type='button' className='btn btn-outline btn-accent'>
+      <button type='button' className='btn btn-accent btn-outline'>
         Accent
       </button>
     </div>
