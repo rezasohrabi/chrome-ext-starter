@@ -1,0 +1,88 @@
+name: "🐞 Bug report"
+description: Report a problem or regression
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the details below so we can reproduce and fix it quickly.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched for existing issues
+          required: true
+        - label: I am using Node >= 20 and pnpm >= 8.15.0
+          required: true
+        - label: I can reproduce this on the latest `main`
+          required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Project version (from package.json)
+      placeholder: e.g., 1.2.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Browser(s) + version, Node, pnpm
+      placeholder: |
+        OS: Windows 10
+        Browser: Chrome 129, Firefox 130
+        Node: 20.11.1
+        pnpm: 8.15.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: What happened, and what did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1) ..., 2) ..., 3) ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or console output
+      render: shell
+      description: Paste any stack traces or errors here
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / recordings
+      description: Drag and drop images or videos that show the issue
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I can reproduce this with a clean clone and `pnpm install`
+          required: false
+        - label: I tried `pnpm build` and saw the same behavior
+          required: false
+        - label: I included environment details and reproduction steps
+          required: true
+
+
